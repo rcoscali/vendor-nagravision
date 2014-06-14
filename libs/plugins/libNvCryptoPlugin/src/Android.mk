@@ -28,8 +28,12 @@ LOCAL_C_INCLUDES:= \
 
 LOCAL_WHOLE_STATIC_LIBRARY := libmedia_helper
 
+LOCAL_STATIC_LIBRARIES := libnvutils
+
 LOCAL_SHARED_LIBRARIES := \
-    libmedia
+    libmedia 
+
+LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/drm
 
 LOCAL_SRC_FILES:= \
     nvCryptoPlugin.cpp \
