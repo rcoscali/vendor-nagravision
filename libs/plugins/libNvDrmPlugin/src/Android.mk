@@ -30,6 +30,8 @@ LOCAL_SHARED_LIBRARIES := \
     libdrmframework \
     libutils \
     libbinder \
+    liblog \
+    libcutils \
     libdl
 
 LOCAL_STATIC_LIBRARIES := \
@@ -38,8 +40,6 @@ LOCAL_STATIC_LIBRARIES := \
 LOCAL_SRC_FILES:= \
     nvDrmPlugin.cpp
 
-LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/drm
-
-LOCAL_LDLIBS:= -llog
+LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib/drm
 
 include $(BUILD_SHARED_LIBRARY)

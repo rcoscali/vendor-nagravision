@@ -521,7 +521,7 @@ status_t NvDrmPlugin::onDecrypt(int uniqueId,
 	} 
       else 
 	{
-	  ALOGE("decBuffer size (%d) too small to hold %d bytes",
+	  ALOGV("decBuffer size (%d) too small to hold %d bytes",
 		(*decBuffer)->length, 
 		encBuffer->length);
 	  return DRM_ERROR_UNKNOWN;
