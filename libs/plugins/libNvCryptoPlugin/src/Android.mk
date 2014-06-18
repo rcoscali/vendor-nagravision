@@ -17,7 +17,7 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE:= libnvcryptoplugin
+LOCAL_MODULE:= libdrmdecrypt
 
 LOCAL_MODULE_TAGS:= optional
 
@@ -33,7 +33,7 @@ LOCAL_STATIC_LIBRARIES := libnvutils
 LOCAL_SHARED_LIBRARIES := \
     libmedia 
 
-LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/drm
+LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)
 
 LOCAL_SRC_FILES:= \
     nvCryptoPlugin.cpp \

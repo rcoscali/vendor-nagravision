@@ -19,7 +19,7 @@
 
 #include <media/hardware/CryptoAPI.h>
 
-#define NV_DRM_SCHEME_UUID "a scheme"
+#define NV_DRM_SCHEME_UUID "bcebe8eb-b0a2-4f71-9929-de2e0fcaf53a"
 
 namespace android {
 
