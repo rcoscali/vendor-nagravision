@@ -33,7 +33,8 @@ static NvCryptoPlugin *sNvCryptoPluginInstance = (NvCryptoPlugin *)NULL;
  *
  * This extern "C" is mandatory to be managed by TPlugInManager
  */
-extern "C" CryptoPlugin* create() 
+extern "C" CryptoPlugin* 
+create() 
 {
   ALOGV("CryptoPlugin* create() - Enter");
 
@@ -51,7 +52,8 @@ extern "C" CryptoPlugin* create()
  *
  * This extern "C" is mandatory to be managed by TPlugInManager
  */
-extern "C" void destroy(CryptoPlugin* pPlugIn) 
+extern "C" void 
+destroy(CryptoPlugin* pPlugIn) 
 {
   ALOGV("void destroy(CryptoPlugin* pPlugIn) - Enter : 0x%p", pPlugIn);
 
@@ -98,7 +100,8 @@ NvCryptoPlugin::~NvCryptoPlugin()
 /*
  * NvCryptoPlugin::requiresSecureDecoderComponent
  */
-bool NvCryptoPlugin::requiresSecureDecoderComponent(const char *mime) const
+bool 
+NvCryptoPlugin::requiresSecureDecoderComponent(const char *mime) const
 {
   ALOGV("NvCryptoPlugin::requiresSecureDecoderComponent() - Enter");
 
@@ -108,19 +111,18 @@ bool NvCryptoPlugin::requiresSecureDecoderComponent(const char *mime) const
 /*
  * NvCryptoPlugin::decrypt
  */
-ssize_t NvCryptoPlugin::decrypt(bool secure,
-				const uint8_t key[16],
-				const uint8_t iv[16],
-				Mode mode,
-				const void *srcPtr,
-				const SubSample *subSamples, size_t numSubSamples,
-				void *dstPtr,
-				AString *errorDetailMsg)
+ssize_t 
+NvCryptoPlugin::decrypt(      bool       secure,
+			const uint8_t    key[16],
+			const uint8_t    iv[16],
+			      Mode       mode,
+			const void      *srcPtr,
+			const SubSample *subSamples, 
+			      size_t     numSubSamples,
+			      void      *dstPtr,
+			      AString   *errorDetailMsg)
 {
   ALOGV("NvCryptoPlugin::decrypt() - Enter");
-
-  /* TBD */
-#warning "To be done !"
 
   return 0;
 }
