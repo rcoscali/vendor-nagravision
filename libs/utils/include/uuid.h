@@ -22,9 +22,9 @@
 
 #include <stdio.h>
 
-int uuid_str2bin(const char *str, uint8_t *bin);
-int uuid_bin2str(const uint8_t *bin, char *str, size_t max_len);
-int uuid_cmp(const uint8_t *uuid1, const uint8_t *uuid2);
-int uuid_is_nil(const uint8_t *uuid);
+int8_t uuid_str2bin(const char *str, uint8_t *bin);
+int8_t uuid_bin2str(const uint8_t *bin, char *str, size_t max_len);
+int8_t uuid_cmp(const uint8_t *uuid1, const uint8_t *uuid2);
+int8_t uuid_is_nil(const uint8_t *uuid);
 
 #endif /* __UUID_H_ */
