@@ -22,9 +22,17 @@
 
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int uuid_str2bin(const char *str, uint8_t *bin);
 int uuid_bin2str(const uint8_t *bin, char *str, size_t max_len);
 int uuid_cmp(const uint8_t *uuid1, const uint8_t *uuid2);
 int uuid_is_nil(const uint8_t *uuid);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __UUID_H_ */

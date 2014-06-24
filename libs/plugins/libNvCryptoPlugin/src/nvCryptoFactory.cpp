@@ -19,6 +19,7 @@
 #include <utils/Log.h>
 
 #include "nvCryptoFactory.h"
+#include "uuid.h"
 
 using namespace android;
 
@@ -54,23 +55,45 @@ NvCryptoFactory::~NvCryptoFactory()
 /*
  * NvCryptoFactory::isCryptoSchemeSupported
  */
-bool NvCryptoFactory::isCryptoSchemeSupported(const uint8_t uuid[16]) const
+bool 
+NvCryptoFactory::isCryptoSchemeSupported(const uint8_t uuid[16]) const
 {
   ALOGV("NvCryptoFactory::isCryptoSchemeSupported() - Enter : uuid='%s'", uuid);
 
-  return (!memcmp((const void *) uuid, 
-		  (const void *) NV_DRM_SCHEME_UUID, 
-		  strlen(NV_DRM_SCHEME_UUID)));
+  uint8_t nvUuid[16];
+
+  /* Nagravision DRM scheme */
+  if (uuid_str2bin(NV_DRM_SCHEME_UUID, nvUuid))
+      if (!uuid_cmp(uuid, nvUuid)) return true;
+
+  /* Microsoft Play Ready DRM scheme */
+  if (uuid_str2bin(MSPR_DRM_SCHEME_UUID, nvUuid))
+      if (!uuid_cmp(uuid, nvUuid)) return true;
+
+  /* DASH IF test 0 DRM scheme */
+  if (uuid_str2bin(DASHIF0_DRM_SCHEME_UUID, nvUuid))
+      if (!uuid_cmp(uuid, nvUuid)) return true;
+
+  /* DASH IF test 1 DRM scheme */
+  if (uuid_str2bin(DASHIF1_DRM_SCHEME_UUID, nvUuid))
+      if (!uuid_cmp(uuid, nvUuid)) return true;
+
+  /* DASH IF test 2 DRM scheme */
+  if (uuid_str2bin(DASHIF2_DRM_SCHEME_UUID, nvUuid))
+      if (!uuid_cmp(uuid, nvUuid)) return true;
+
+  return false;
 }
 
 /*
  * NvCryptoFactory::createPlugin
  */
 extern "C" { extern CryptoPlugin* create(); }
-status_t NvCryptoFactory::createPlugin(const uint8_t uuid[16], 
-				       const void *data, 
-				       size_t size,
-				       CryptoPlugin **plugin)
+status_t 
+NvCryptoFactory::createPlugin(const uint8_t        uuid[16], 
+			      const void          *data, 
+				    size_t         size,
+				    CryptoPlugin **plugin)
 {
   ALOGV("NvCryptoFactory::createPlugin() - Enter");
   if (plugin)
