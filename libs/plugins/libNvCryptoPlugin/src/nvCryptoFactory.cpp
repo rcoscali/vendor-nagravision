@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-
 //#define LOG_NDEBUG 0
 #define LOG_TAG "nvCryptoFactory"
 #include <utils/Log.h>
@@ -31,14 +26,6 @@ using namespace android;
 /* ==========================================================================
  * Static definitions for factory
  * ==========================================================================*/
-
-/* status */
-#define NV_KO    -1
-#define NV_OK     0
-
-/* bool */
-#define NV_FALSE (1 != 1)
-#define NV_TRUE  (1 == 1)
 
 /* ==========================================================================
  * Implementation of the CryptoFactory class

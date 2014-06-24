@@ -176,7 +176,7 @@ uuid_bin2str(const uint8_t *bin,
 		 "%02x%02x-"                          /*  2 digits  5 chars */
 		 "%02x%02x-"                          /*  2 digits  5 chars */
 		 "%02x%02x%02x%02x%02x%02x",          /*  6 digits 12 chars */
-		 /* 16 digits total */
+		                                         /* 16 digits total */
 		 bin[0], bin[1], bin[2], bin[3],
 		 bin[4], bin[5], 
 		 bin[6], bin[7],

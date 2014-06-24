@@ -27,24 +27,16 @@ LOCAL_C_INCLUDES:= 			 \
     $(LOCAL_PATH)/../../../utils/include \
     $(LOCAL_PATH)/../include
 
-LOCAL_WHOLE_STATIC_LIBRARY := \
-    libnvutils		  \
-    libmedia_helper
-
 LOCAL_ADDITIONAL_DEPENDENCIES := libnvutils
-LOCAL_STATIC_LIBRARY := \
-    libnvutils		  
 
-LOCAL_SHARED_LIBRARIES := \
-    libmedia
+LOCAL_STATIC_LIBRARIES := \
+    libnvutils		  
 
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)
 
 LOCAL_SRC_FILES:= 	\
     nvCryptoPlugin.cpp 	\
     nvCryptoFactory.cpp
-
-LOCAL_LDLIBS:= -llog
 
 include $(BUILD_SHARED_LIBRARY)
 
