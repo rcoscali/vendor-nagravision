@@ -17,6 +17,7 @@
 #ifndef __NV_DRM_PLUGIN_H__
 #define __NV_DRM_PLUGIN_H__
 
+#include <libxml/tree.h>
 #include <DrmEngineBase.h>
 
 namespace android {
@@ -136,6 +137,8 @@ namespace android {
 		    off64_t offset);
 
   private:
+    bool parseMpd(const String8 &path);
+
     DecryptHandle* openDecryptSessionImpl();
 
     DrmMetadata *mNvDrmMetadata;
