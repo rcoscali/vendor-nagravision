@@ -15,6 +15,8 @@
  */
 
 #include <stdio.h>
+#include <vector>
+#include <string>
 
 #define LOG_NDEBUG 0
 #define LOG_TAG "nvDrmPlugin"
@@ -342,7 +344,7 @@ NvDrmPlugin::parseMpd(const String8 &path)
   xmlDocPtr pDocument = NULL;
   xmlNodePtr pRootNode = NULL;
 
-  pDocument = xmlParseFile(argv[1]);
+  pDocument = xmlParseFile(path.string());
   if (pDocument == NULL)
     return false;
   ALOGV("MPD: pDocument = %p\n", pDocument);

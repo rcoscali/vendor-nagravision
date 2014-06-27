@@ -27,6 +27,8 @@ LOCAL_C_INCLUDES += \
     $(TOP)/external/libxml2/include \
     $(TOP)/external/icu4c/common \
     $(TOP)/external/stlport/stlport \
+    $(TOP)/bionic \
+    $(TOP)/bionic/libstdc++/include \
     $(LOCAL_PATH)/../include
 
 LOCAL_SHARED_LIBRARIES := \
@@ -37,6 +39,7 @@ LOCAL_SHARED_LIBRARIES := \
     liblog \
     libcutils \
     libstlport \
+    libstdc++ \
     libdl
 
 LOCAL_STATIC_LIBRARIES := \

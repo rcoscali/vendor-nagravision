@@ -202,7 +202,7 @@ findSupportedMediaUri(xmlNodePtr cur)
   it = reprElts.begin();
   do 
     {
-      if (cur = getNodeByNameAndType(cur, "Representation", XML_ELEMENT_NODE))
+      if ((cur = getNodeByNameAndType(cur, "Representation", XML_ELEMENT_NODE)))
 	{
 	  reprElts.insert(it, cur);
 	  it = reprElts.begin();
@@ -210,7 +210,7 @@ findSupportedMediaUri(xmlNodePtr cur)
 	}
     }
   while(cur);
-  ALOGV("findMediaUri: found %ld Representation elements\n", reprElts.size());
+  ALOGV("findMediaUri: found %d Representation elements\n", reprElts.size());
 
   it1 = mimeTypes.begin();
   for (vector<xmlNodePtr>::iterator it = reprElts.begin();
@@ -218,7 +218,7 @@ findSupportedMediaUri(xmlNodePtr cur)
        ++it)
     {
       xmlAttrPtr curAttr;
-      if (curAttr = getAttrByName(((xmlNodePtr)*it)->properties, "mimeType"))
+      if ((curAttr = getAttrByName(((xmlNodePtr)*it)->properties, "mimeType")))
 	{
 	  const char* mime = (const char*)xmlNodeListGetString(((xmlNodePtr)*it)->doc, 
 							       curAttr->children, 1);
@@ -228,7 +228,7 @@ findSupportedMediaUri(xmlNodePtr cur)
 	}
       /* Only one mime type per attribute */
     }
-  ALOGV("findMediaUri: Added %ld mime types\n", mimeTypes.size());
+  ALOGV("findMediaUri: Added %d mime types\n", mimeTypes.size());
 
   /*
    * AdaptationSet/mimeType
@@ -236,15 +236,17 @@ findSupportedMediaUri(xmlNodePtr cur)
   ALOGV("findMediaUri: Seeking AdaptationSet elements ...\n");
   cur = pRootNode;
   it = adaptElts.begin();
-  do 
-    if (cur = getNodeByNameAndType(cur, "AdaptationSet", XML_ELEMENT_NODE))
-      {
-	adaptElts.insert(it, cur);
-	it = adaptElts.begin();
-	if (cur->next) cur = cur->next;
-      }
+  do
+    { 
+      if ((cur = getNodeByNameAndType(cur, "AdaptationSet", XML_ELEMENT_NODE)))
+        {
+	  adaptElts.insert(it, cur);
+          it = adaptElts.begin();
+	  if (cur->next) cur = cur->next;
+        }
+    }
   while(cur);
-  ALOGV("findMediaUri: found %ld AdaptationSet elements\n", adaptElts.size());
+  ALOGV("findMediaUri: found %d AdaptationSet elements\n", adaptElts.size());
 
   it1 = mimeTypes.begin();
   for (vector<xmlNodePtr>::iterator it = adaptElts.begin();
@@ -252,7 +254,7 @@ findSupportedMediaUri(xmlNodePtr cur)
        ++it)
     {
       xmlAttrPtr curAttr;
-      if (curAttr = getAttrByName(((xmlNodePtr)*it)->properties, "mimeType"))
+      if ((curAttr = getAttrByName(((xmlNodePtr)*it)->properties, "mimeType")))
 	{
 	  const char* mime = (const char*)xmlNodeListGetString(((xmlNodePtr)*it)->doc, 
 							       curAttr->children, 1);
@@ -262,7 +264,7 @@ findSupportedMediaUri(xmlNodePtr cur)
 	}
       /* Only one mime type per attribute */
     }
-  ALOGV("findMediaUri: Added %ld mime types\n", mimeTypes.size());
+  ALOGV("findMediaUri: Added %d mime types\n", mimeTypes.size());
 
   /*
    * BaseURL/textnode
@@ -271,14 +273,16 @@ findSupportedMediaUri(xmlNodePtr cur)
   cur = pRootNode;
   it = baseUrlElts.begin();
   do 
-    if (cur = getNodeByNameAndType(cur, "BaseURL", XML_ELEMENT_NODE))
-      {
-	baseUrlElts.insert(it, cur);
-	it = baseUrlElts.begin();
-	if (cur->next) cur = cur->next;
-      }
+    {
+      if ((cur = getNodeByNameAndType(cur, "BaseURL", XML_ELEMENT_NODE)))
+        {
+	  baseUrlElts.insert(it, cur);
+	  it = baseUrlElts.begin();
+	  if (cur->next) cur = cur->next;
+        }
+    }
   while(cur);
-  ALOGV("findMediaUri: found %ld BaseURL elements\n", baseUrlElts.size());
+  ALOGV("findMediaUri: found %d BaseURL elements\n", baseUrlElts.size());
 
   it1 = baseUrls.begin();
   for (vector<xmlNodePtr>::iterator it = baseUrlElts.begin();
@@ -286,7 +290,7 @@ findSupportedMediaUri(xmlNodePtr cur)
        ++it)
     {
       xmlNodePtr textElt;
-      if (textElt = getNodeByNameAndType((xmlNodePtr)*it, (const char *)NULL, XML_TEXT_NODE))
+      if ((textElt = getNodeByNameAndType((xmlNodePtr)*it, (const char *)NULL, XML_TEXT_NODE)))
 	{
 	  ALOGV("findMediaUri: found url %s in elt %s\n", 
 		textElt->content, ((xmlNodePtr)*it)->name);
@@ -295,7 +299,7 @@ findSupportedMediaUri(xmlNodePtr cur)
 	}
       /* Only one mime type per attribute */
     }
-  ALOGV("findMediaUri: Added %ld urls\n", baseUrls.size());
+  ALOGV("findMediaUri: Added %d urls\n", baseUrls.size());
       
   /*
    * SegmentTemplate/media
@@ -303,15 +307,17 @@ findSupportedMediaUri(xmlNodePtr cur)
   ALOGV("findMediaUri: Seeking SegmentTemplate elements ...\n");
   cur = pRootNode;
   it = segTmplElts.begin();
-  do 
-    if (cur = getNodeByNameAndType(cur, "SegmentTemplate", XML_ELEMENT_NODE))
-      {
-	segTmplElts.insert(it, cur);
-	it = segTmplElts.begin();
-	if (cur->next) cur = cur->next;
-      }
+  do
+    { 
+      if (cur = getNodeByNameAndType(cur, "SegmentTemplate", XML_ELEMENT_NODE))
+        {
+	  segTmplElts.insert(it, cur);
+	  it = segTmplElts.begin();
+	  if (cur->next) cur = cur->next;
+        }
+    }
   while(cur);
-  ALOGV("findMediaUri: found %ld SegmentTemplate elements\n", segTmplElts.size());
+  ALOGV("findMediaUri: found %d SegmentTemplate elements\n", segTmplElts.size());
 
   it1 = baseUrls.begin();
   for (vector<xmlNodePtr>::iterator it = segTmplElts.begin();
@@ -319,7 +325,7 @@ findSupportedMediaUri(xmlNodePtr cur)
        ++it)
     {
       xmlAttrPtr curAttr;
-      if (curAttr = getAttrByName(((xmlNodePtr)*it)->properties, "media"))
+      if ((curAttr = getAttrByName(((xmlNodePtr)*it)->properties, "media")))
 	{
 	  const char* url = (const char*)xmlNodeListGetString(((xmlNodePtr)*it)->doc, 
 							       curAttr->children, 1);
@@ -329,9 +335,9 @@ findSupportedMediaUri(xmlNodePtr cur)
 	}
       /* Only one mime type per attribute */
     }
-  ALOGV("findMediaUri: Added %ld urls\n", mimeTypes.size());
+  ALOGV("findMediaUri: Added %d urls\n", mimeTypes.size());
 
-  ALOGV("findMediaUri: found %ld mimeTypes and %ld URLs\n", 
+  ALOGV("findMediaUri: found %d mimeTypes and %d URLs\n", 
 	mimeTypes.size(), baseUrls.size());
   bool ret = true;
   for (vector<string>::iterator it = mimeTypes.begin();

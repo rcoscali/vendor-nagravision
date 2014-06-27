@@ -17,9 +17,16 @@
 #ifndef __PARSE_MPD_HELPERS_H_
 #define __PARSE_MPD_HELPERS_H_
 
+#include <vector>
+#include <string>
+
+using namespace std;
+
 bool   findDrmScheme(xmlNodePtr cur);
 char  *find_extension(string mString);
 string getPathExtension(string str);
 bool   findSupportedMediaUri(xmlNodePtr cur);
+bool   findCencElement(xmlNodePtr cur);
+bool   findDrmScheme(xmlNodePtr cur);
 
-#endif
+#endif /*__PARSE_MPD_HELPERS_H_*/
