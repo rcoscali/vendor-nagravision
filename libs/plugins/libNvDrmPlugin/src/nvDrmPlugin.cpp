@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-//#define LOG_NDEBUG 0
+#include <stdio.h>
+#include <vector>
+#include <string>
+#include <map>
+
+#define LOG_NDEBUG 0
 #define LOG_TAG "nvDrmPlugin"
 #include <utils/Log.h>
 
@@ -27,7 +32,11 @@
 #include <drm/DrmConvertedStatus.h>
 #include <drm/DrmInfoRequest.h>
 #include <drm/DrmSupportInfo.h>
+
+#include <libxml/parser.h>
+
 #include "nvDrmPlugin.h"
+#include "parseMpdHelpers.h"
 
 using namespace android;
 
@@ -36,13 +45,66 @@ using namespace android;
  * ==========================================================================*/
 
 static NvDrmPlugin *sNvDrmPluginInstance = (NvDrmPlugin *)NULL;
+static bool mapInitialized = false;
 
-#define N_METADATA 2
-static char const *sNvMetadata[N_METADATA*2] = {
+const char* const NvDrmPlugin::sNvMetadata[N_METADATA*2] = {
   "Copyright", "NagraVision ¢ 2014",
-  "Author", "Rémi Cohen-Scali"
+  "Author",    "Rémi Cohen-Scali"
 };
 
+String8 NvDrmPlugin::cencUuid = String8("urn:mpeg:dash:mp4protection:2011");
+
+#define ADDMAP(x)	\
+static map<const char *, String8> x; \
+String8 \
+NvDrmPlugin::x##Find(const char *key) \
+{ \
+  return x.find(key)->second; \
+}
+ADDMAP(drmSchemes);
+ADDMAP(mimeTypes);
+ADDMAP(fileExts);
+
+/*
+ * init ref maps
+ */
+extern "C" void
+initRefDataMaps()
+{
+#define MAPINSERT(x, y, z) x.insert(pair<const char *, String8>(y,String8(z)))
+
+  // Supported DRM scheme UUIDs
+  MAPINSERT(drmSchemes, "MSPlayReady", "9a04f079-9840-4286-ab92-e65be0885f95");
+  MAPINSERT(  drmSchemes, "Dummy1", "00000000-0000-0000-0000-000000000001");
+  MAPINSERT(  drmSchemes, "Dummy2", "00000000-0000-0000-0000-000000000002");
+  MAPINSERT(  drmSchemes, "Nagravision", "deadbeef-dead-beef-2403-deadadd0beef");
+
+  // Supported mimeTypes
+  MAPINSERT(  mimeTypes, "nagra", "application/vnd.nagra.drm");
+  MAPINSERT(  mimeTypes, "video1", "video/mp4");
+  MAPINSERT(  mimeTypes, "audio1", "audio/mp4");
+  MAPINSERT(  mimeTypes, "audio2", "audio/m4a");
+  MAPINSERT(  mimeTypes, "video2", "video/m4v");
+  MAPINSERT(  mimeTypes, "audio3", "audio/mpa");
+  MAPINSERT(  mimeTypes, "video3", "video/mpv");
+  MAPINSERT(  mimeTypes, "video4", "video/uvv");
+  MAPINSERT(  mimeTypes, "audio4", "audio/uva");
+
+  // Supported file extensions
+  MAPINSERT(  fileExts, "mpd", ".mpd");
+  MAPINSERT(  fileExts, "f1", ".nvv");
+  MAPINSERT(  fileExts, "f2", ".mp4");
+  MAPINSERT(  fileExts, "f3", ".m4a");
+  MAPINSERT(  fileExts, "f4", ".m4v");
+  MAPINSERT(  fileExts, "f5", ".mpa");
+  MAPINSERT(  fileExts, "f6", ".mpv");
+  MAPINSERT(  fileExts, "f7", ".uvv");
+  MAPINSERT(  fileExts, "f8", ".uva");
+
+#undef MAPINSERT
+
+  mapInitialized = true;
+}
 
 /*
  * create
@@ -54,10 +116,11 @@ create()
 {
   ALOGV("IDrmEngine* create() - Enter");
 
+  if (!mapInitialized)
+    initRefDataMaps();
+      
   if ((NvDrmPlugin *)NULL == sNvDrmPluginInstance)
-    {
-      sNvDrmPluginInstance = new NvDrmPlugin();
-    }
+    sNvDrmPluginInstance = new NvDrmPlugin();
 
   ALOGV("IDrmEngine* create() - Exit : instance=0x%p", sNvDrmPluginInstance);
   return (IDrmEngine*)sNvDrmPluginInstance;
@@ -79,9 +142,8 @@ destroy(IDrmEngine* pPlugIn)
       sNvDrmPluginInstance = (NvDrmPlugin *)NULL;
     }
   else
-    {
-      delete pPlugIn;
-    }
+    delete pPlugIn;
+
   pPlugIn = (IDrmEngine *)NULL;
 
   ALOGV("void destroy(IDrmEngine* pPlugIn) - Exit");  
@@ -105,11 +167,11 @@ NvDrmPlugin::NvDrmPlugin()
        n < N_METADATA/2; 
        n++)
     {
-      String8 *key = new String8(sNvMetadata[2*n]);
-      String8 *value = new String8(sNvMetadata[2*n+1]);
+      String8 *key = new String8(NvDrmPlugin::sNvMetadata[2*n]);
+      String8 *value = new String8(NvDrmPlugin::sNvMetadata[2*n+1]);
       mNvDrmMetadata->put(key, (char const *)value);
 
-      ALOGV("NvDrmPlugin::NvDrmPlugin(): added metadata key='%s' value='%s'", key, value);
+      ALOGV("NvDrmPlugin::NvDrmPlugin(): added metadata key='%s' value='%s'", key->string(), value->string());
 
       delete key;
       delete value;
@@ -224,6 +286,7 @@ NvDrmPlugin::onSetOnInfoListener(      int                         uniqueId,
 				 const IDrmEngine::OnInfoListener *infoListener)
 {
   ALOGV("NvDrmPlugin::onSetOnInfoListener() - Enter : %d", uniqueId);
+
   return DRM_NO_ERROR;
 }
 
@@ -254,13 +317,23 @@ DrmSupportInfo*
 NvDrmPlugin::onGetSupportInfo(int uniqueId)
 {
   ALOGV("NvDrmPlugin::onGetSupportInfo() - Enter : %d", uniqueId);
+
   DrmSupportInfo* drmSupportInfo = new DrmSupportInfo();
+
   // Add mimetype's
-  drmSupportInfo->addMimeType(String8("application/vnd.nagra.drm"));
+  for (map<const char *, String8>::iterator it = mimeTypes.begin();
+       it != mimeTypes.end();
+       ++it)
+    drmSupportInfo->addMimeType(it->second);
+
   // Add File Suffixes
-  drmSupportInfo->addFileSuffix(String8(".nvv"));
+  for (map<const char *, String8>::iterator it = fileExts.begin();
+       it != fileExts.end();
+       ++it)
+    drmSupportInfo->addFileSuffix(it->second);
+
   // Add plug-in description
-  drmSupportInfo->setDescription(String8("NagraVision plug-in"));
+  drmSupportInfo->setDescription(String8("NagraVision DRM plug-in"));
 
   ALOGV("NvDrmPlugin::onGetSupportInfo() : %d", uniqueId);
   return drmSupportInfo;
@@ -306,6 +379,45 @@ NvDrmPlugin::onAcquireDrmInfo(      int             uniqueId,
 }
 
 /*
+ * NvDrmPlugin::parseMpd
+ */
+bool
+NvDrmPlugin::parseMpd(const String8 &path)
+{
+  bool cipherSchemeOk = false;
+  bool drmSchemeOk = false;
+  bool embedMediaOk = false;
+  xmlDocPtr pDocument = NULL;
+  xmlNodePtr pRootNode = NULL;
+
+  if (access(path.string(), R_OK) == -1)
+    {
+      ALOGV("parseMPD: Media Descriptor not accessible !");
+      return false;
+    }
+  pDocument = xmlParseFile(path.string());
+  if (pDocument == NULL)
+    return false;
+  ALOGV("MPD: pDocument = %p\n", pDocument);
+  pRootNode = xmlDocGetRootElement(pDocument);
+  ALOGV("MPD: pRootNode = %p\n", pRootNode);
+  if (pRootNode == NULL)
+      return false;
+
+  /*  print_element_names(pRootNode);*/
+  cipherSchemeOk = findCencElement(pRootNode);
+  ALOGV("findCencElement: >>> cipherSchemeOk %s\n", cipherSchemeOk ? "True" : "False");
+  drmSchemeOk = findDrmScheme(pRootNode);
+  ALOGV("findDrmScheme: >>> drmSchemeOk %s\n", drmSchemeOk ? "True" : "False");
+  embedMediaOk = findSupportedMediaUri(pRootNode);
+
+  ALOGV("Media from this descriptor are %sSUPPORTED\n", 
+	(cipherSchemeOk && drmSchemeOk & embedMediaOk) ? "" : "NOT ");
+
+  return (cipherSchemeOk && drmSchemeOk && embedMediaOk);
+}
+
+/*
  * NvDrmPlugin::onCanHandle
  */
 bool 
@@ -313,9 +425,29 @@ NvDrmPlugin::onCanHandle(      int      uniqueId,
 			 const String8 &path) 
 {
   ALOGV("NvDrmPlugin::canHandle() - Enter : %d path='%s'", uniqueId, path.string());
+
   String8 extension = path.getPathExtension();
   extension.toLower();
-  return (String8(".nvv") == extension);
+
+  if (String8(".mpd") == extension) {
+    ALOGV("NvDrmPlugin::canHandle() - parsing MPD");
+    return parseMpd(path);
+  }
+
+  for (map<const char *, String8>::iterator it = fileExts.begin();
+       it != fileExts.end();
+       ++it)
+    {
+      if (it->first != String8("mpd") &&
+	  it->second == extension) 
+	{
+	  ALOGV("NvDrmPlugin::canHandle() - %s supported", it->second.string());
+	  return true;
+	}
+    }
+
+  ALOGV("NvDrmPlugin::canHandle() - NONE supported");
+  return false;
 }
 
 /*
@@ -327,7 +459,13 @@ NvDrmPlugin::onGetOriginalMimeType(      int      uniqueId,
 				         int      fd) 
 {
   ALOGV("NvDrmPlugin::onGetOriginalMimeType() - Enter : %d path='%s'", uniqueId, path.string());
-  return String8("video/mp4");
+  String8 str("");
+  for (map<const char *, String8>::iterator it = mimeTypes.begin();
+       it != mimeTypes.end();
+       ++it) 
+    str.append(it->second + String8("; "));
+
+  return str;
 }
 
 /*

@@ -22,22 +22,33 @@ LOCAL_MODULE:= libnvdrmplugin
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_C_INCLUDES += \
+    $(TOP)/frameworks/native/include/utils \
     $(TOP)/frameworks/av/include \
     $(TOP)/frameworks/av/drm/libdrmframework/plugins/common/include \
+    $(TOP)/external/libxml2/include \
+    $(TOP)/external/icu4c/common \
+    $(TOP)/external/stlport/stlport \
+    $(TOP)/bionic \
+    $(TOP)/bionic/libstdc++/include \
     $(LOCAL_PATH)/../include
 
 LOCAL_SHARED_LIBRARIES := \
     libdrmframework \
     libutils \
     libbinder \
+    libicuuc \
     liblog \
     libcutils \
+    libstlport \
+    libstdc++ \
     libdl
 
 LOCAL_STATIC_LIBRARIES := \
-    libdrmframeworkcommon
+    libdrmframeworkcommon \
+    libxml2
 
 LOCAL_SRC_FILES:= \
+    parseMpdHelpers.cpp \
     nvDrmPlugin.cpp
 
 LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib/drm
