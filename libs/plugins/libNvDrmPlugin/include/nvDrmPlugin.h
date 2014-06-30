@@ -237,6 +237,7 @@ namespace android
 		    off64_t offset);
 
   private:
+<<<<<<< HEAD
 
     /*
      * Media Presentation Description (MPD) parsing
@@ -246,6 +247,10 @@ namespace android
     /*
      * Open a decrypt session
      */
+=======
+    bool parseMpd(const String8 &path);
+
+>>>>>>> c16cfe270e0a762bbe2920bc4372ebb27b42d67b
     DecryptHandle* openDecryptSessionImpl();
 
     /*

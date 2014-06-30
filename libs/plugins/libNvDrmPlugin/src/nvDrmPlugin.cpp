@@ -17,7 +17,10 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+<<<<<<< HEAD
 #include <map>
+=======
+>>>>>>> c16cfe270e0a762bbe2920bc4372ebb27b42d67b
 
 #define LOG_NDEBUG 0
 #define LOG_TAG "nvDrmPlugin"
@@ -321,6 +324,7 @@ NvDrmPlugin::onGetSupportInfo(int uniqueId)
   DrmSupportInfo* drmSupportInfo = new DrmSupportInfo();
 
   // Add mimetype's
+<<<<<<< HEAD
   for (map<const char *, String8>::iterator it = mimeTypes.begin();
        it != mimeTypes.end();
        ++it)
@@ -331,6 +335,27 @@ NvDrmPlugin::onGetSupportInfo(int uniqueId)
        it != fileExts.end();
        ++it)
     drmSupportInfo->addFileSuffix(it->second);
+=======
+  drmSupportInfo->addMimeType(String8("application/vnd.nagra.drm"));
+  drmSupportInfo->addMimeType(String8("video/mp4"));
+  drmSupportInfo->addMimeType(String8("audio/mp4"));
+  drmSupportInfo->addMimeType(String8("audio/m4a"));
+  drmSupportInfo->addMimeType(String8("video/m4v"));
+  drmSupportInfo->addMimeType(String8("audio/mpa"));
+  drmSupportInfo->addMimeType(String8("video/mpv"));
+  drmSupportInfo->addMimeType(String8("video/uvv"));
+  drmSupportInfo->addMimeType(String8("audio/uva"));
+
+  // Add File Suffixes
+  drmSupportInfo->addFileSuffix(String8(".nvv"));
+  drmSupportInfo->addFileSuffix(String8(".mp4"));
+  drmSupportInfo->addFileSuffix(String8(".m4a"));
+  drmSupportInfo->addFileSuffix(String8(".m4v"));
+  drmSupportInfo->addFileSuffix(String8(".mpa"));
+  drmSupportInfo->addFileSuffix(String8(".mpv"));
+  drmSupportInfo->addFileSuffix(String8(".uvv"));
+  drmSupportInfo->addFileSuffix(String8(".uva"));
+>>>>>>> c16cfe270e0a762bbe2920bc4372ebb27b42d67b
 
   // Add plug-in description
   drmSupportInfo->setDescription(String8("NagraVision DRM plug-in"));
@@ -390,11 +415,14 @@ NvDrmPlugin::parseMpd(const String8 &path)
   xmlDocPtr pDocument = NULL;
   xmlNodePtr pRootNode = NULL;
 
+<<<<<<< HEAD
   if (access(path.string(), R_OK) == -1)
     {
       ALOGV("parseMPD: Media Descriptor not accessible !");
       return false;
     }
+=======
+>>>>>>> c16cfe270e0a762bbe2920bc4372ebb27b42d67b
   pDocument = xmlParseFile(path.string());
   if (pDocument == NULL)
     return false;
@@ -402,8 +430,15 @@ NvDrmPlugin::parseMpd(const String8 &path)
   pRootNode = xmlDocGetRootElement(pDocument);
   ALOGV("MPD: pRootNode = %p\n", pRootNode);
   if (pRootNode == NULL)
+<<<<<<< HEAD
       return false;
 
+=======
+    {
+      xmlFreeDoc(pDocument);
+      return false;
+    }
+>>>>>>> c16cfe270e0a762bbe2920bc4372ebb27b42d67b
   /*  print_element_names(pRootNode);*/
   cipherSchemeOk = findCencElement(pRootNode);
   ALOGV("findCencElement: >>> cipherSchemeOk %s\n", cipherSchemeOk ? "True" : "False");
@@ -411,9 +446,16 @@ NvDrmPlugin::parseMpd(const String8 &path)
   ALOGV("findDrmScheme: >>> drmSchemeOk %s\n", drmSchemeOk ? "True" : "False");
   embedMediaOk = findSupportedMediaUri(pRootNode);
 
+<<<<<<< HEAD
   ALOGV("Media from this descriptor are %sSUPPORTED\n", 
 	(cipherSchemeOk && drmSchemeOk & embedMediaOk) ? "" : "NOT ");
 
+=======
+  xmlFree(pRootNode);
+  xmlFreeDoc(pDocument);
+
+  fprintf(stderr, "supported: %s\n", (cipherSchemeOk && drmSchemeOk & embedMediaOk) ? "YES" : "NO");
+>>>>>>> c16cfe270e0a762bbe2920bc4372ebb27b42d67b
   return (cipherSchemeOk && drmSchemeOk && embedMediaOk);
 }
 
@@ -428,11 +470,15 @@ NvDrmPlugin::onCanHandle(      int      uniqueId,
 
   String8 extension = path.getPathExtension();
   extension.toLower();
+<<<<<<< HEAD
 
+=======
+>>>>>>> c16cfe270e0a762bbe2920bc4372ebb27b42d67b
   if (String8(".mpd") == extension) {
     ALOGV("NvDrmPlugin::canHandle() - parsing MPD");
     return parseMpd(path);
   }
+<<<<<<< HEAD
 
   for (map<const char *, String8>::iterator it = fileExts.begin();
        it != fileExts.end();
@@ -445,6 +491,36 @@ NvDrmPlugin::onCanHandle(      int      uniqueId,
 	  return true;
 	}
     }
+=======
+  if (String8(".nvv") == extension) {
+    ALOGV("NvDrmPlugin::canHandle() - .nvv supported");
+    return true;
+  }
+  if (String8(".uvv") == extension) {
+    ALOGV("NvDrmPlugin::canHandle() - .uvv supported");
+    return true;
+  }
+  if (String8(".uva") == extension) {
+    ALOGV("NvDrmPlugin::canHandle() - .uva supported");
+    return true;
+  }
+  if (String8(".mpv") == extension) {
+    ALOGV("NvDrmPlugin::canHandle() - .mpv supported");
+    return true;
+  }
+  if (String8(".mpa") == extension) {
+    ALOGV("NvDrmPlugin::canHandle() - .mpa supported");
+    return true;
+  }
+  if (String8(".m4v") == extension) {
+    ALOGV("NvDrmPlugin::canHandle() - .m4v supported");
+    return true;
+  }
+  if (String8(".m4a") == extension) {
+    ALOGV("NvDrmPlugin::canHandle() - .m4a supported");
+    return true;
+  }
+>>>>>>> c16cfe270e0a762bbe2920bc4372ebb27b42d67b
 
   ALOGV("NvDrmPlugin::canHandle() - NONE supported");
   return false;
@@ -459,6 +535,7 @@ NvDrmPlugin::onGetOriginalMimeType(      int      uniqueId,
 				         int      fd) 
 {
   ALOGV("NvDrmPlugin::onGetOriginalMimeType() - Enter : %d path='%s'", uniqueId, path.string());
+<<<<<<< HEAD
   String8 str("");
   for (map<const char *, String8>::iterator it = mimeTypes.begin();
        it != mimeTypes.end();
@@ -466,6 +543,9 @@ NvDrmPlugin::onGetOriginalMimeType(      int      uniqueId,
     str.append(it->second + String8("; "));
 
   return str;
+=======
+  return String8("video/mpd; video/mp4; audio/m4a; video/m4v; audio/mpa; video/mpv; video/uvv; audio/uva");
+>>>>>>> c16cfe270e0a762bbe2920bc4372ebb27b42d67b
 }
 
 /*

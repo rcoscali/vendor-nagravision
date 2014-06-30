@@ -181,7 +181,7 @@ getPathExtension(string str)
  *   a text node enclosed in a 'BaseURL' element, containing an URL to a media
  *   a 'SegmentTemplate' element attribute, 'media', containing a URL template for segment media
  *
-  * TODO: try to exploit codec codes (FourCC and other profiles as in avc1.640028, mp4a.40.2)
+ * TODO: try to exploit codec codes (FourCC and other profiles as in avc1.640028, mp4a.40.2)
  */
 bool
 findSupportedMediaUri(xmlNodePtr cur)
