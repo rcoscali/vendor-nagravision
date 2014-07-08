@@ -17,8 +17,7 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE:= libnvdrmplugin
-LOCAL_MODULE_OWNER := nagravision
+LOCAL_MODULE:= nvcryptokernel
 
 LOCAL_MODULE_TAGS := optional
 
@@ -44,14 +43,9 @@ LOCAL_SHARED_LIBRARIES := \
     libstdc++ \
     libdl
 
-LOCAL_STATIC_LIBRARIES := \
-    libdrmframeworkcommon \
-    libxml2
+LOCAL_STATIC_LIBRARIES :=
 
 LOCAL_SRC_FILES:= \
-    parseMpdHelpers.cpp \
-    nvDrmPlugin.cpp
+    CryptoKernel.c
 
-LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib/drm
-
-include $(BUILD_SHARED_LIBRARY)
+include $(BUILD_STATIC_LIBRARY)

@@ -105,7 +105,7 @@ NvCryptoPlugin::requiresSecureDecoderComponent(const char *mime) const
 {
   ALOGV("NvCryptoPlugin::requiresSecureDecoderComponent() - Enter");
 
-  return strncmp(mime, "application/vnd.nagra.drm", strlen("application/vnd.nagra.drm"));
+  return static_cast<bool>(CryptoKernel_NvCryptoPlugin_requiresSecureDecoderComponent(mime));
 }
 
 /*
@@ -124,5 +124,27 @@ NvCryptoPlugin::decrypt(      bool       secure,
 {
   ALOGV("NvCryptoPlugin::decrypt() - Enter");
 
-  return 0;
+  char *localErrorDetailMsg = NULL;
+  CK_CryptoPlugin_Mode localMode;
+  if (mode != CyptoPlugin::Mode::kMode_AES_CTR) {
+    if (errorDetailMsg != (AString *)NULL)
+      {
+	AString localAStringErrorDetailMsg("Invalid encryption mode - Only support AES_CTR !");
+	*errorDetailMsg = localAStringErrorDetailMsg;
+      }
+    return 0;
+  }
+  ssize_t ret = CryptoKernel_NvCryptoPlugin_decrypt(static_cast<char>(secure),
+						    key, iv,
+						    srcPtr,
+						    subSamples, numSubSamples,
+						    dstPtr,
+						    &localErrorDetailMsg);
+  if (errorDetailMsg != (AString *)NULL)
+    {
+      AString localAStringErrorDetailMsg(localErrorDetailMsg);
+      *errorDetailMsg = localAStringErrorDetailMsg;
+    }
+
+  return ret;
 }

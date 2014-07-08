@@ -25,6 +25,11 @@
 #define DASHIF1_DRM_SCHEME_UUID	"00000000-0000-0000-0000-000000000001"
 #define DASHIF2_DRM_SCHEME_UUID	"00000000-0000-0000-0000-000000000002"
 
+using namespace android;
+extern "C" {
+      CryptoFactory *createCryptoFactory();
+}
+
 namespace android {
 
   class NvCryptoFactory : public CryptoFactory {

@@ -17,27 +17,35 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE:= libnvcryptoplugin
-LOCAL_MODULE_OWNER := nagravision
+LOCAL_MODULE:= nvdrmkernel
 
-LOCAL_MODULE_TAGS:= optional
+LOCAL_MODULE_TAGS := optional
 
-LOCAL_C_INCLUDES:= 			 \
-    $(TOP)/frameworks/av/include 	 \
-    $(TOP)/frameworks/native/include 	 \
-    $(LOCAL_PATH)/../../../utils/include \
+LOCAL_C_INCLUDES += \
+    $(TOP)/frameworks/native/include/utils \
+    $(TOP)/frameworks/av/include \
+    $(TOP)/frameworks/av/drm/libdrmframework/plugins/common/include \
+    $(TOP)/external/libxml2/include \
+    $(TOP)/external/icu4c/common \
+    $(TOP)/external/stlport/stlport \
+    $(TOP)/bionic \
+    $(TOP)/bionic/libstdc++/include \
     $(LOCAL_PATH)/../include
 
-LOCAL_ADDITIONAL_DEPENDENCIES := libnvutils
+LOCAL_SHARED_LIBRARIES := \
+    libdrmframework \
+    libutils \
+    libbinder \
+    libicuuc \
+    liblog \
+    libcutils \
+    libstlport \
+    libstdc++ \
+    libdl
 
-LOCAL_STATIC_LIBRARIES := \
-    libnvutils		  
+LOCAL_STATIC_LIBRARIES :=
 
-LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib/mediadrm
+LOCAL_SRC_FILES:= \
+    DrmKernel.c
 
-LOCAL_SRC_FILES:= 	\
-    nvCryptoPlugin.cpp 	\
-    nvCryptoFactory.cpp
-
-include $(BUILD_SHARED_LIBRARY)
-
+include $(BUILD_STATIC_LIBRARY)

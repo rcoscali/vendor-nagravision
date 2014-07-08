@@ -31,6 +31,12 @@ using namespace android;
  * Implementation of the CryptoFactory class
  * ==========================================================================*/
 
+// Shared library entry point
+CryptoFactory *createCryptoFactory()
+{
+    return new NvCryptoFactory();
+}
+
 /*
  * Public Constructor
  */
