@@ -21,25 +21,22 @@ LOCAL_MODULE:= libnvcryptoplugin
 
 LOCAL_MODULE_TAGS:= optional
 
-LOCAL_C_INCLUDES:= \
-    $(TOP)/frameworks/av/include \
-    $(TOP)/frameworks/native/include \
+LOCAL_C_INCLUDES:= 			 \
+    $(TOP)/frameworks/av/include 	 \
+    $(TOP)/frameworks/native/include 	 \
     $(LOCAL_PATH)/../../../utils/include \
     $(LOCAL_PATH)/../include
 
-LOCAL_STATIC_LIBRARIES := \
-    libnvutils
+LOCAL_ADDITIONAL_DEPENDENCIES := libnvutils
 
-LOCAL_SHARED_LIBRARIES := \
-    libmedia \
-    liblog \
-    libcutils
+LOCAL_STATIC_LIBRARIES := \
+    libnvutils		  
 
 LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib/mediadrm
 
-LOCAL_SRC_FILES:= \
-    nvCryptoFactory.cpp \
-    nvCryptoPlugin.cpp
+LOCAL_SRC_FILES:= 	\
+    nvCryptoPlugin.cpp 	\
+    nvCryptoFactory.cpp
 
 include $(BUILD_SHARED_LIBRARY)
 

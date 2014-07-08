@@ -27,6 +27,7 @@ LOCAL_C_INCLUDES += \
 LOCAL_SRC_FILES:= \
     uuid.c
 
-LOCAL_LDLIBS:= -llog
-
 include $(BUILD_STATIC_LIBRARY)
+
+include $(call all-subdir-makefiles)
+

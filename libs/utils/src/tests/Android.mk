@@ -13,5 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-include $(call all-subdir-makefiles)
+LOCAL_PATH:= $(call my-dir)
 
+include $(CLEAR_VARS)
+
+LOCAL_MODULE:= nvutils_tests
+
+LOCAL_MODULE_TAGS := optional
+
+LOCAL_C_INCLUDES += \
+    /usr/include \
+    $(LOCAL_PATH)/../../include
+
+LOCAL_SRC_FILES:= \
+    ../uuid.c     \
+    main.c
+
+include $(BUILD_HOST_EXECUTABLE)
