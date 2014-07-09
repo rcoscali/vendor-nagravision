@@ -16,11 +16,10 @@
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
-
-LOCAL_MODULE:= nvcryptokernel
-
+LOCAL_MODULE:= libnvcryptokernel
 LOCAL_MODULE_TAGS := optional
-
+LOCAL_SRC_FILES:= CryptoKernel.c
+LOCAL_CFLAGS := -fvisibility=hidden
 LOCAL_C_INCLUDES += \
     $(TOP)/frameworks/native/include/utils \
     $(TOP)/frameworks/av/include \
@@ -42,10 +41,4 @@ LOCAL_SHARED_LIBRARIES := \
     libstlport \
     libstdc++ \
     libdl
-
-LOCAL_STATIC_LIBRARIES :=
-
-LOCAL_SRC_FILES:= \
-    CryptoKernel.c
-
 include $(BUILD_STATIC_LIBRARY)

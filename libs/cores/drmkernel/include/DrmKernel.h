@@ -17,6 +17,8 @@
 #ifndef __DRM_KERNEL_H__
 #define __DRM_KERNEL_H__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -92,7 +94,7 @@ extern "C" {
     struct NV_DrmRequestInfoMapNode_st *next;
     char *key;
     char *value;
-  }
+  };
 
   struct NV_DrmInfoRequest_st {
     int infoType;
@@ -126,12 +128,12 @@ extern "C" {
     struct NV_ExtendedDataNode_st *extendedData;
   };
 
-  typedef void (NV_OnInfoListener_OnInfoPtr *)(struct NV_DrmInfoEvent_st *event);
+  typedef void (*NV_OnInfoListener_OnInfoPtr)(struct NV_DrmInfoEvent_st *event);
 
   //  struct NV_DrmMetadata_st* DrmKernel_NvDrmPlugin_onGetMetadata(int uniqueId, const char *path);
   struct NV_DrmConstraints_st* DrmKernel_NvDrmPlugin_onGetConstraints(int uniqueId, const char *path, int action);
   struct NV_DrmInfoStatus_st* DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId, const struct NV_DrmInfo_st *drmInfo);
-  int DrmKernel_NvDrmPlugin_onSetOnInfoListener(int uniqueId, NV_OnInfoListener_OnInfoPtr *lsnr);
+  int DrmKernel_NvDrmPlugin_onSetOnInfoListener(int uniqueId, NV_OnInfoListener_OnInfoPtr lsnr);
   int DrmKernel_NvDrmPlugin_onInitialize(int uniqueId);
   int DrmKernel_NvDrmPlugin_onTerminate(int uniqueId);
   struct NV_DrmSupportInfo_st* DrmKernel_NvDrmPlugin_onGetSupportInfo(int uniqueId);
@@ -149,11 +151,11 @@ extern "C" {
   int DrmKernel_NvDrmPlugin_onRemoveAllRights(int uniqueId);
   int DrmKernel_NvDrmPlugin_onOpenConvertSession(int uniqueId, int convertId);
   /* Check DrmConvertedStatus in order to replace void */
-  void* DrmKernel_NvDrmPlugin_onConvertData(int uniqueId, int convertId, NV_DrmBuffer_st *inputData);
+  void* DrmKernel_NvDrmPlugin_onConvertData(int uniqueId, int convertId, struct NV_DrmBuffer_st *inputData);
   void* DrmKernel_NvDrmPlugin_onCloseConvertSession(int uniqueId, int convertId);
   /*                                                        check in order to replace void */
-  int DrmKernel_NvDrmPlugin_onOpenDecryptSession(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, int fd, off64_t offset, off64_t length);
-  int DrmKernel_NvDrmPlugin_onOpenDecryptSession(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, const char *uri);
+  int DrmKernel_NvDrmPlugin_onOpenDecryptSessionFd(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, int fd, off64_t offset, off64_t length);
+  int DrmKernel_NvDrmPlugin_onOpenDecryptSessionUri(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, const char *uri);
   int DrmKernel_NvDrmPlugin_onCloseDecryptSession(int uniqueId, struct NV_DecryptHandle_st *decryptHandle);
   int DrmKernel_NvDrmPlugin_onInitializeDecryptUnit(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, int decryptUnitId, struct NV_DrmBuffer_st *headerInfo);
   int DrmKernel_NvDrmPlugin_onDecrypt(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, int decryptUnitId, const struct NV_DrmBuffer_st *encBuffer, struct NV_DrmBuffer_st *decBuffer, struct NV_DrmBuffer_st *IV);

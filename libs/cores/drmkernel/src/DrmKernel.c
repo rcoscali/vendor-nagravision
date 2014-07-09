@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
+#include <stdlib.h>
+
 #include "DrmKernel.h"
+
+#define NULL	((void *)0)
 
 struct NV_DrmConstraints_st* 
 DrmKernel_NvDrmPlugin_onGetConstraints(int uniqueId, const char *path, int action)

@@ -16,17 +16,11 @@
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
-
 LOCAL_MODULE:= libnvutils
-
 LOCAL_MODULE_TAGS := optional
-
-LOCAL_C_INCLUDES += \
-    $(LOCAL_PATH)/../include
-
-LOCAL_SRC_FILES:= \
-    uuid.c
-
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../include
+LOCAL_SRC_FILES:= uuid.c
+LOCAL_CFLAGS := -fvisibility=hidden
 include $(BUILD_STATIC_LIBRARY)
 
 include $(call all-subdir-makefiles)

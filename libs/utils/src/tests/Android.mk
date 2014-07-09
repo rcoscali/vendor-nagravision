@@ -21,6 +21,8 @@ LOCAL_MODULE:= nvutils_tests
 
 LOCAL_MODULE_TAGS := optional
 
+LOCAL_CFLAGS := -fvisibility=hidden
+
 LOCAL_C_INCLUDES += \
     /usr/include \
     $(LOCAL_PATH)/../../include

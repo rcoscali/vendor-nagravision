@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <string.h>
+
 #include "CryptoKernel.h"
 
 /*
@@ -47,12 +49,11 @@ char CryptoKernel_NvCryptoPlugin_requiresSecureDecoderComponent(const char *mime
 ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure, 
 					    const uint8_t key[16], 
 					    const uint8_t iv[16], 
-					    int mode, 
 					    const void *srcPtr, 
-					    const SubSample *subSamples, 
+					    const struct NV_SubSample_st *subSamples, 
 					    size_t numSubSamples, 
 					    void *dstPtr, 
-					    const char **errorDetailMsg)
+					    char **errorDetailMsg)
 {
   *errorDetailMsg = strdup("Not yet implemented !!");
   return 0;

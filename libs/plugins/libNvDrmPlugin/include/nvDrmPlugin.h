@@ -20,6 +20,8 @@
 #include <libxml/tree.h>
 #include <DrmEngineBase.h>
 
+#define SYM_EXPORT	__attribute__ ((visibility ("default")))
+
 namespace android 
 {
   /*
@@ -46,6 +48,7 @@ namespace android
     /*
      * Provides constraints associated to a content for the action
      */
+    SYM_EXPORT
     DrmConstraints* onGetConstraints(int uniqueId, 
 				     const String8* path, 
 				     int action);
@@ -53,23 +56,27 @@ namespace android
     /*
      * Provides DRM metadata associated to a content
      */
+    SYM_EXPORT
     DrmMetadata* onGetMetadata(int uniqueId, 
 			       const String8* path);
 
     /*
      * 
      */
+    SYM_EXPORT
     status_t onInitialize(int uniqueId);
 
     /*
      * 
      */
+    SYM_EXPORT
     status_t onSetOnInfoListener(int uniqueId, 
 				 const IDrmEngine::OnInfoListener* infoListener);
 
     /*
      * 
      */
+    SYM_EXPORT
     status_t onTerminate(int uniqueId);
 
     /*
@@ -77,18 +84,21 @@ namespace android
      * extension, mime type, or, if file is a media presentation description,
      * mime types and extensions obtained from its parsing.
      */
+    SYM_EXPORT
     bool onCanHandle(int uniqueId, 
 		     const String8& path);
 
     /*
      * 
      */
+    SYM_EXPORT
     DrmInfoStatus* onProcessDrmInfo(int uniqueId, 
 				    const DrmInfo* drmInfo);
 
     /*
      * 
      */
+    SYM_EXPORT
     status_t onSaveRights(int uniqueId, 
 			  const DrmRights& drmRights,
 			  const String8& rightsPath, 
@@ -97,12 +107,14 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     DrmInfo* onAcquireDrmInfo(int uniqueId, 
 			      const DrmInfoRequest* drmInfoRequest);
 
     /*
      * 
      */
+    SYM_EXPORT
     String8 onGetOriginalMimeType(int uniqueId, 
 				  const String8& path, 
 				  int fd);
@@ -110,6 +122,7 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     int onGetDrmObjectType(int uniqueId, 
 			   const String8& path, 
 			   const String8& mimeType);
@@ -117,6 +130,7 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     int onCheckRightsStatus(int uniqueId, 
 			    const String8& path,
 			    int action);
@@ -124,6 +138,7 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     status_t onConsumeRights(int uniqueId,
 			     DecryptHandle* decryptHandle, 
 			     int action, 
@@ -132,6 +147,7 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     status_t onSetPlaybackStatus(int uniqueId, 
 				 DecryptHandle* decryptHandle, 
 				 int playbackStatus, 
@@ -140,6 +156,7 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     bool onValidateAction(int uniqueId, 
 			  const String8& path, 
 			  int action, 
@@ -148,23 +165,27 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     status_t onRemoveRights(int uniqueId, 
 			    const String8& path);
 
     /*
      * 
      */
+    SYM_EXPORT
     status_t onRemoveAllRights(int uniqueId);
 
     /*
      * 
      */
+    SYM_EXPORT
     status_t onOpenConvertSession(int uniqueId, 
 				  int convertId);
 
     /*
      * 
      */
+    SYM_EXPORT
     DrmConvertedStatus* onConvertData(int uniqueId, 
 				      int convertId, 
 				      const DrmBuffer* inputData);
@@ -172,17 +193,20 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     DrmConvertedStatus* onCloseConvertSession(int uniqueId, 
 					      int convertId);
 
     /*
      * 
      */
+    SYM_EXPORT
     DrmSupportInfo* onGetSupportInfo(int uniqueId);
 
     /*
      * 
      */
+    SYM_EXPORT
     status_t onOpenDecryptSession(int uniqueId, 
 				  DecryptHandle* decryptHandle, 
 				  int fd, 
@@ -192,6 +216,7 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     status_t onOpenDecryptSession(int uniqueId, 
 				  DecryptHandle* decryptHandle, 
 				  const char* uri);
@@ -199,12 +224,14 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     status_t onCloseDecryptSession(int uniqueId, 
 				   DecryptHandle* decryptHandle);
 
     /*
      * 
      */
+    SYM_EXPORT
     status_t onInitializeDecryptUnit(int uniqueId, 
 				     DecryptHandle* decryptHandle,
 				     int decryptUnitId, 
@@ -213,6 +240,7 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     status_t onDecrypt(int uniqueId, 
 		       DecryptHandle* decryptHandle, 
 		       int decryptUnitId,
@@ -223,6 +251,7 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     status_t onFinalizeDecryptUnit(int uniqueId, 
 				   DecryptHandle* decryptHandle, 
 				   int decryptUnitId);
@@ -230,6 +259,7 @@ namespace android
     /*
      * 
      */
+    SYM_EXPORT
     ssize_t onPread(int uniqueId, 
 		    DecryptHandle* decryptHandle,
 		    void* buffer, 

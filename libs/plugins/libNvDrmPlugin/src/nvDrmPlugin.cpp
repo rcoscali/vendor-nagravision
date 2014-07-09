@@ -37,6 +37,7 @@
 
 #include "nvDrmPlugin.h"
 #include "parseMpdHelpers.h"
+#include "DrmKernel.h"
 
 using namespace android;
 
@@ -111,7 +112,8 @@ initRefDataMaps()
  *
  * This extern "C" is mandatory to be managed by TPlugInManager
  */
-extern "C" IDrmEngine* 
+extern "C" 
+SYM_EXPORT IDrmEngine* 
 create() 
 {
   ALOGV("IDrmEngine* create() - Enter");
@@ -131,7 +133,8 @@ create()
  *
  * This extern "C" is mandatory to be managed by TPlugInManager
  */
-extern "C" void 
+extern "C" 
+SYM_EXPORT void 
 destroy(IDrmEngine* pPlugIn) 
 {
   ALOGV("void destroy(IDrmEngine* pPlugIn) - Enter : 0x%p", pPlugIn);  
@@ -209,26 +212,30 @@ NvDrmPlugin::onGetConstraints(      int      uniqueId,
 			            int      action)
 {
   ALOGV("NvDrmPlugin::onGetConstraints() - Enter : %d", uniqueId);
-  DrmConstraints* drmConstraints = (DrmConstraints*)NULL;
-  struct NV_DrmConstraints_st *localConstraint 
-    = DrmKernel_NvDrmPlugin_onGetConstraints(uniqueId, path, action);
-
-  if (localConstraint != (struct NV_DrmConstraints_st *)NULL) {
-    drmContraints = new DrmConstraints();
-    struct NV_DrmConstraints_st *cur = localConstraint;
-
-    while (cur)
-      {
-	drmContraints->put(new String8(localConstraint->key), new String8(localConstraint->value));
-	cur = cur->next;
-	if (localConstraint->key) free(localConstraint->key);
-	if (localConstraint->value) free(localConstraint->value);
-	free(localConstraint);
-	localConstraint = cur;
-      }
-  }
   
-  return drmConstraints;
+  DrmConstraints *someDrmConstraints = (DrmConstraints *)NULL;
+  
+  struct NV_DrmConstraints_st *localConstraints =
+    DrmKernel_NvDrmPlugin_onGetConstraints(uniqueId, path->string(), action);
+
+  if (localConstraints != (struct NV_DrmConstraints_st *)NULL)
+    {
+      someDrmConstraints = new DrmConstraints();
+      struct NV_DrmConstraints_st *cur = localConstraints;
+
+      while (cur)
+	{
+	  someDrmConstraints->put((const String8 *)new String8(localConstraints->key), 
+				  localConstraints->value);
+	  cur = cur->next;
+	  if (localConstraints->key) free(localConstraints->key);
+	  if (localConstraints->value) free(localConstraints->value);
+	  free(localConstraints);
+	  localConstraints = cur;
+	}
+    }
+  
+  return someDrmConstraints;
 }
 
 /*

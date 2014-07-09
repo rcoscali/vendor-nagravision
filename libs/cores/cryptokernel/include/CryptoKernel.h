@@ -17,19 +17,27 @@
 #ifndef __CRYPTO_KERNEL_H__
 #define __CRYPTO_KERNEL_H__
 
+#include <unistd.h>
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-char CryptoKernel_NvCryptoPlugin_requiresSecureDecoderComponent(const char *mime);
-ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure, 
+  struct NV_SubSample_st {
+    size_t mNumBytesOfClearData;
+    size_t mNumBytesOfEncryptedData;
+  };
+
+  char CryptoKernel_NvCryptoPlugin_requiresSecureDecoderComponent(const char *mime);
+  ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure, 
 					      const uint8_t key[16], 
 					      const uint8_t iv[16], 
 					      const void *srcPtr, 
-					      const SubSample *subSamples, 
+					      const struct NV_SubSample_st *subSamples, 
 					      size_t numSubSamples, 
 					      void *dstPtr, 
-					      const char **errorDetailMsg);
+					      char **errorDetailMsg);
 
 #ifdef __cplusplus
 }

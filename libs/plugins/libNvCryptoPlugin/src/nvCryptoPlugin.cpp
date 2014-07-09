@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+#include <media/stagefright/foundation/AString.h>
+
 #define LOG_NDEBUG 0
 #define LOG_TAG "nvCryptoPlugin"
 #include <utils/Log.h>
 
 #include "nvCryptoPlugin.h"
+#include "CryptoKernel.h"
 
 using namespace android;
 
@@ -125,8 +128,7 @@ NvCryptoPlugin::decrypt(      bool       secure,
   ALOGV("NvCryptoPlugin::decrypt() - Enter");
 
   char *localErrorDetailMsg = NULL;
-  CK_CryptoPlugin_Mode localMode;
-  if (mode != CyptoPlugin::Mode::kMode_AES_CTR) {
+  if (mode != kMode_AES_CTR) {
     if (errorDetailMsg != (AString *)NULL)
       {
 	AString localAStringErrorDetailMsg("Invalid encryption mode - Only support AES_CTR !");
@@ -134,10 +136,13 @@ NvCryptoPlugin::decrypt(      bool       secure,
       }
     return 0;
   }
+  struct NV_SubSample_st localSubSamples;
+  localSubSamples.mNumBytesOfClearData     = subSamples->mNumBytesOfClearData;
+  localSubSamples.mNumBytesOfEncryptedData = subSamples->mNumBytesOfEncryptedData;
   ssize_t ret = CryptoKernel_NvCryptoPlugin_decrypt(static_cast<char>(secure),
 						    key, iv,
 						    srcPtr,
-						    subSamples, numSubSamples,
+						    &localSubSamples, numSubSamples,
 						    dstPtr,
 						    &localErrorDetailMsg);
   if (errorDetailMsg != (AString *)NULL)
