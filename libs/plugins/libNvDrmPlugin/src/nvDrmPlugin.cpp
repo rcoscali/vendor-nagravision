@@ -209,16 +209,25 @@ NvDrmPlugin::onGetConstraints(      int      uniqueId,
 			            int      action)
 {
   ALOGV("NvDrmPlugin::onGetConstraints() - Enter : %d", uniqueId);
-  DrmConstraints* drmConstraints = new DrmConstraints();
+  DrmConstraints* drmConstraints = (DrmConstraints*)NULL;
+  struct NV_DrmConstraints_st *localConstraint 
+    = DrmKernel_NvDrmPlugin_onGetConstraints(uniqueId, path, action);
+
+  if (localConstraint != (struct NV_DrmConstraints_st *)NULL) {
+    drmContraints = new DrmConstraints();
+    struct NV_DrmConstraints_st *cur = localConstraint;
+
+    while (cur)
+      {
+	drmContraints->put(new String8(localConstraint->key), new String8(localConstraint->value));
+	cur = cur->next;
+	if (localConstraint->key) free(localConstraint->key);
+	if (localConstraint->value) free(localConstraint->value);
+	free(localConstraint);
+	localConstraint = cur;
+      }
+  }
   
-  String8 value("dummy_available_time");
-  char* charValue = NULL;
-  charValue = new char[value.length() + 1];
-  strncpy(charValue, value.string(), value.length());
-
-  //Just add dummy available time for verification
-  drmConstraints->put(&(DrmConstraints::LICENSE_AVAILABLE_TIME), charValue);
-
   return drmConstraints;
 }
 
