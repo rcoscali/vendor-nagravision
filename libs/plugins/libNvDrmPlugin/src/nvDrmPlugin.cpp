@@ -195,7 +195,7 @@ NvDrmPlugin::~NvDrmPlugin() {
 /*
  * NvDrmPlugin::onGetMetadata
  */
-DrmMetadata* 
+SYM_EXPORT DrmMetadata* 
 NvDrmPlugin::onGetMetadata(      int      uniqueId, 
 			   const String8 *path) 
 {
@@ -206,7 +206,7 @@ NvDrmPlugin::onGetMetadata(      int      uniqueId,
 /*
  * NvDrmPlugin::onGetConstraints
  */
-DrmConstraints* 
+SYM_EXPORT DrmConstraints* 
 NvDrmPlugin::onGetConstraints(      int      uniqueId, 
 			      const String8 *path, 
 			            int      action)
@@ -241,7 +241,7 @@ NvDrmPlugin::onGetConstraints(      int      uniqueId,
 /*
  * NvDrmPlugin::onProcessDrmInfo
  */
-DrmInfoStatus* 
+SYM_EXPORT DrmInfoStatus* 
 NvDrmPlugin::onProcessDrmInfo(      int      uniqueId, 
 			      const DrmInfo *drmInfo)
 {
@@ -297,7 +297,7 @@ NvDrmPlugin::onProcessDrmInfo(      int      uniqueId,
 /*
  * NvDrmPlugin::onSetOnInfoListener
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onSetOnInfoListener(      int                         uniqueId, 
 				 const IDrmEngine::OnInfoListener *infoListener)
 {
@@ -309,7 +309,7 @@ NvDrmPlugin::onSetOnInfoListener(      int                         uniqueId,
 /*
  * NvDrmPlugin::onInitialize
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onInitialize(int uniqueId)
 {
   ALOGV("NvDrmPlugin::onInitialize() - Enter : %d", uniqueId);
@@ -319,7 +319,7 @@ NvDrmPlugin::onInitialize(int uniqueId)
 /*
  * NvDrmPlugin::onTerminate
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onTerminate(int uniqueId)
 {
   ALOGV("NvDrmPlugin::onTerminate() - Enter : %d", uniqueId);
@@ -329,7 +329,7 @@ NvDrmPlugin::onTerminate(int uniqueId)
 /*
  * NvDrmPlugin::onGetSupportInfo
  */
-DrmSupportInfo* 
+SYM_EXPORT DrmSupportInfo* 
 NvDrmPlugin::onGetSupportInfo(int uniqueId)
 {
   ALOGV("NvDrmPlugin::onGetSupportInfo() - Enter : %d", uniqueId);
@@ -358,7 +358,7 @@ NvDrmPlugin::onGetSupportInfo(int uniqueId)
 /*
  * NvDrmPlugin::onSaveRights
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onSaveRights(      int        uniqueId, 
 			  const DrmRights &drmRights,
 			  const String8   &rightsPath, 
@@ -371,7 +371,7 @@ NvDrmPlugin::onSaveRights(      int        uniqueId,
 /*
  * NvDrmPlugin::onAcquireDrmInfo
  */
-DrmInfo* 
+SYM_EXPORT DrmInfo* 
 NvDrmPlugin::onAcquireDrmInfo(      int             uniqueId, 
 			      const DrmInfoRequest *drmInfoRequest)
 {
@@ -397,7 +397,7 @@ NvDrmPlugin::onAcquireDrmInfo(      int             uniqueId,
 /*
  * NvDrmPlugin::parseMpd
  */
-bool
+SYM_EXPORT bool
 NvDrmPlugin::parseMpd(const String8 &path)
 {
   bool cipherSchemeOk = false;
@@ -436,7 +436,7 @@ NvDrmPlugin::parseMpd(const String8 &path)
 /*
  * NvDrmPlugin::onCanHandle
  */
-bool 
+SYM_EXPORT bool 
 NvDrmPlugin::onCanHandle(      int      uniqueId, 
 			 const String8 &path) 
 {
@@ -469,7 +469,7 @@ NvDrmPlugin::onCanHandle(      int      uniqueId,
 /*
  * NvDrmPlugin::onGetOriginalMimeType
  */
-String8 
+SYM_EXPORT String8 
 NvDrmPlugin::onGetOriginalMimeType(      int      uniqueId, 
 				   const String8 &path, 
 				         int      fd) 
@@ -487,7 +487,7 @@ NvDrmPlugin::onGetOriginalMimeType(      int      uniqueId,
 /*
  * NvDrmPlugin::onGetDrmObjectType
  */
-int 
+SYM_EXPORT int 
 NvDrmPlugin::onGetDrmObjectType(      int      uniqueId, 
 				const String8 &path, 
 				const String8 &mimeType) 
@@ -499,7 +499,7 @@ NvDrmPlugin::onGetDrmObjectType(      int      uniqueId,
 /*
  * NvDrmPlugin::onCheckRightsStatus
  */
-int 
+SYM_EXPORT int 
 NvDrmPlugin::onCheckRightsStatus(      int      uniqueId, 
 				 const String8 &path, 
 				       int      action) 
@@ -514,7 +514,7 @@ NvDrmPlugin::onCheckRightsStatus(      int      uniqueId,
 /*
  * NvDrmPlugin::onConsumeRights
  */
-status_t
+SYM_EXPORT status_t
 NvDrmPlugin::onConsumeRights(int            uniqueId, 
 			     DecryptHandle *decryptHandle,
 			     int            action, 
@@ -527,7 +527,7 @@ NvDrmPlugin::onConsumeRights(int            uniqueId,
 /*
  * NvDrmPlugin::onSetPlaybackStatus
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onSetPlaybackStatus(int            uniqueId, 
 				 DecryptHandle *decryptHandle,
 				 int            playbackStatus, 
@@ -540,7 +540,7 @@ NvDrmPlugin::onSetPlaybackStatus(int            uniqueId,
 /*
  * NvDrmPlugin::onValidateAction
  */
-bool 
+SYM_EXPORT bool 
 NvDrmPlugin::onValidateAction(      int                uniqueId, 
 			      const String8           &path,
 			            int                action, 
@@ -553,7 +553,7 @@ NvDrmPlugin::onValidateAction(      int                uniqueId,
 /*
  * NvDrmPlugin::onRemoveRights
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onRemoveRights(      int      uniqueId, 
 			    const String8 &path) 
 {
@@ -564,7 +564,7 @@ NvDrmPlugin::onRemoveRights(      int      uniqueId,
 /*
  * NvDrmPlugin::onRemoveAllRights
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onRemoveAllRights(int uniqueId) 
 {
   ALOGV("NvDrmPlugin::onRemoveAllRights() - Enter : %d", uniqueId);
@@ -574,7 +574,7 @@ NvDrmPlugin::onRemoveAllRights(int uniqueId)
 /*
  * NvDrmPlugin::onOpenConvertSession
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onOpenConvertSession(int uniqueId, 
 				  int convertId) 
 {
@@ -585,7 +585,7 @@ NvDrmPlugin::onOpenConvertSession(int uniqueId,
 /*
  * NvDrmPlugin::onConvertData
  */
-DrmConvertedStatus* 
+SYM_EXPORT DrmConvertedStatus* 
 NvDrmPlugin::onConvertData(      int        uniqueId, 
 			         int        convertId, 
 			   const DrmBuffer *inputData)
@@ -607,7 +607,7 @@ NvDrmPlugin::onConvertData(      int        uniqueId,
 /*
  * NvDrmPlugin::onCloseConvertSession
  */
-DrmConvertedStatus* 
+SYM_EXPORT DrmConvertedStatus* 
 NvDrmPlugin::onCloseConvertSession(int uniqueId, 
 				   int convertId) 
 {
@@ -618,7 +618,7 @@ NvDrmPlugin::onCloseConvertSession(int uniqueId,
 /*
  * NvDrmPlugin::onOpenDecryptSession
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onOpenDecryptSession(int            uniqueId, 
 				  DecryptHandle *decryptHandle, 
 				  int            fd, 
@@ -641,7 +641,7 @@ NvDrmPlugin::onOpenDecryptSession(int            uniqueId,
 /*
  * NvDrmPlugin::onOpenDecryptSession
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onOpenDecryptSession(      int            uniqueId, 
 				        DecryptHandle *decryptHandle, 
 				  const char          *uri) 
@@ -652,7 +652,7 @@ NvDrmPlugin::onOpenDecryptSession(      int            uniqueId,
 /*
  * NvDrmPlugin::onCloseDecryptSession
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onCloseDecryptSession(int            uniqueId, 
 				   DecryptHandle *decryptHandle) 
 {
@@ -676,7 +676,7 @@ NvDrmPlugin::onCloseDecryptSession(int            uniqueId,
 /*
  * NvDrmPlugin::onInitializeDecryptUnit
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onInitializeDecryptUnit(      int            uniqueId, 
 				           DecryptHandle *decryptHandle,
 				           int            decryptUnitId, 
@@ -689,7 +689,7 @@ NvDrmPlugin::onInitializeDecryptUnit(      int            uniqueId,
 /*
  * NvDrmPlugin::onDecrypt
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onDecrypt(      int             uniqueId, 
 		             DecryptHandle  *decryptHandle,
 		             int             decryptUnitId, 
@@ -727,7 +727,7 @@ NvDrmPlugin::onDecrypt(      int             uniqueId,
 /*
  * NvDrmPlugin::onFinalizeDecryptUnit
  */
-status_t 
+SYM_EXPORT status_t 
 NvDrmPlugin::onFinalizeDecryptUnit(int            uniqueId, 
 				   DecryptHandle *decryptHandle, 
 				   int            decryptUnitId) 
@@ -739,7 +739,7 @@ NvDrmPlugin::onFinalizeDecryptUnit(int            uniqueId,
 /*
  * NvDrmPlugin::onPread
  */
-ssize_t 
+SYM_EXPORT ssize_t 
 NvDrmPlugin::onPread(int            uniqueId, 
 		     DecryptHandle *decryptHandle,
 		     void          *buffer, 

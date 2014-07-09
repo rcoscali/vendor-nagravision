@@ -20,7 +20,9 @@
 #include <libxml/tree.h>
 #include <DrmEngineBase.h>
 
+#ifndef SYM_EXPORT
 #define SYM_EXPORT	__attribute__ ((visibility ("default")))
+#endif
 
 namespace android 
 {

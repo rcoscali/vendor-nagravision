@@ -25,9 +25,13 @@
 #define DASHIF1_DRM_SCHEME_UUID	"00000000-0000-0000-0000-000000000001"
 #define DASHIF2_DRM_SCHEME_UUID	"00000000-0000-0000-0000-000000000002"
 
+#ifndef SYM_EXPORT
+#define SYM_EXPORT	__attribute__ ((visibility ("default")))
+#endif
+
 using namespace android;
 extern "C" {
-      CryptoFactory *createCryptoFactory();
+      SYM_EXPORT CryptoFactory *createCryptoFactory();
 }
 
 namespace android {
@@ -37,12 +41,12 @@ namespace android {
     NvCryptoFactory();
     virtual ~NvCryptoFactory();
 
-    bool isCryptoSchemeSupported(const uint8_t uuid[16]) const;
+    SYM_EXPORT bool isCryptoSchemeSupported(const uint8_t uuid[16]) const;
 
-    virtual status_t createPlugin(const uint8_t uuid[16], 
-				  const void *data, 
-				  size_t size,
-				  CryptoPlugin **plugin);
+    SYM_EXPORT virtual status_t createPlugin(const uint8_t uuid[16], 
+					     const void *data, 
+					     size_t size,
+					     CryptoPlugin **plugin);
   };
 
 }

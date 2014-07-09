@@ -19,6 +19,10 @@
 
 #include <media/ICrypto.h>
 
+#ifndef SYM_EXPORT
+#define SYM_EXPORT	__attribute__ ((visibility ("default")))
+#endif
+
 namespace android {
 
   class NvCryptoPlugin : public CryptoPlugin {

@@ -36,7 +36,8 @@ static NvCryptoPlugin *sNvCryptoPluginInstance = (NvCryptoPlugin *)NULL;
  *
  * This extern "C" is mandatory to be managed by TPlugInManager
  */
-extern "C" CryptoPlugin* 
+extern "C" 
+SYM_EXPORT CryptoPlugin* 
 create() 
 {
   ALOGV("CryptoPlugin* create() - Enter");
@@ -55,7 +56,8 @@ create()
  *
  * This extern "C" is mandatory to be managed by TPlugInManager
  */
-extern "C" void 
+extern "C" 
+SYM_EXPORT void 
 destroy(CryptoPlugin* pPlugIn) 
 {
   ALOGV("void destroy(CryptoPlugin* pPlugIn) - Enter : 0x%p", pPlugIn);
@@ -103,7 +105,7 @@ NvCryptoPlugin::~NvCryptoPlugin()
 /*
  * NvCryptoPlugin::requiresSecureDecoderComponent
  */
-bool 
+SYM_EXPORT bool 
 NvCryptoPlugin::requiresSecureDecoderComponent(const char *mime) const
 {
   ALOGV("NvCryptoPlugin::requiresSecureDecoderComponent() - Enter");
@@ -114,7 +116,7 @@ NvCryptoPlugin::requiresSecureDecoderComponent(const char *mime) const
 /*
  * NvCryptoPlugin::decrypt
  */
-ssize_t 
+SYM_EXPORT ssize_t 
 NvCryptoPlugin::decrypt(      bool       secure,
 			const uint8_t    key[16],
 			const uint8_t    iv[16],
