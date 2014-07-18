@@ -31,6 +31,13 @@ using namespace android;
  * Implementation of the CryptoFactory class
  * ==========================================================================*/
 
+// Shared library entry point
+SYM_EXPORT CryptoFactory *
+createCryptoFactory()
+{
+    return new NvCryptoFactory();
+}
+
 /*
  * Public Constructor
  */
@@ -55,7 +62,7 @@ NvCryptoFactory::~NvCryptoFactory()
 /*
  * NvCryptoFactory::isCryptoSchemeSupported
  */
-bool 
+SYM_EXPORT bool 
 NvCryptoFactory::isCryptoSchemeSupported(const uint8_t uuid[16]) const
 {
   ALOGV("NvCryptoFactory::isCryptoSchemeSupported() - Enter : uuid='%s'", uuid);
@@ -89,7 +96,7 @@ NvCryptoFactory::isCryptoSchemeSupported(const uint8_t uuid[16]) const
  * NvCryptoFactory::createPlugin
  */
 extern "C" { extern CryptoPlugin* create(); }
-status_t 
+SYM_EXPORT status_t 
 NvCryptoFactory::createPlugin(const uint8_t        uuid[16], 
 			      const void          *data, 
 				    size_t         size,

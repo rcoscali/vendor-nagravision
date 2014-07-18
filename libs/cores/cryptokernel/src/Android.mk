@@ -16,12 +16,29 @@
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE:= libnvutils
+LOCAL_MODULE:= libnvcryptokernel
 LOCAL_MODULE_TAGS := optional
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../include
-LOCAL_SRC_FILES:= uuid.c
+LOCAL_SRC_FILES:= CryptoKernel.c
 LOCAL_CFLAGS := -fvisibility=hidden
+LOCAL_C_INCLUDES += \
+    $(TOP)/frameworks/native/include/utils \
+    $(TOP)/frameworks/av/include \
+    $(TOP)/frameworks/av/drm/libdrmframework/plugins/common/include \
+    $(TOP)/external/libxml2/include \
+    $(TOP)/external/icu4c/common \
+    $(TOP)/external/stlport/stlport \
+    $(TOP)/bionic \
+    $(TOP)/bionic/libstdc++/include \
+    $(LOCAL_PATH)/../include
+
+LOCAL_SHARED_LIBRARIES := \
+    libdrmframework \
+    libutils \
+    libbinder \
+    libicuuc \
+    liblog \
+    libcutils \
+    libstlport \
+    libstdc++ \
+    libdl
 include $(BUILD_STATIC_LIBRARY)
-
-include $(call all-subdir-makefiles)
-

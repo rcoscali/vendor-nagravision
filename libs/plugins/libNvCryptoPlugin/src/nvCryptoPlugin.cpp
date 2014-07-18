@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <media/stagefright/foundation/AString.h>
+
 #define LOG_NDEBUG 0
 #define LOG_TAG "nvCryptoPlugin"
 #include <utils/Log.h>
@@ -21,6 +23,7 @@
 #include "drm/DrmAPI.h"
 #include "nvCryptoPlugin.h"
 #include "media/stagefright/MediaErrors.h"
+#include "CryptoKernel.h"
 
 using namespace android;
 
@@ -35,7 +38,8 @@ static NvCryptoPlugin *sNvCryptoPluginInstance = (NvCryptoPlugin *)NULL;
  *
  * This extern "C" is mandatory to be managed by TPlugInManager
  */
-extern "C" CryptoPlugin* 
+extern "C" 
+SYM_EXPORT CryptoPlugin* 
 create() 
 {
   ALOGV("CryptoPlugin* create() - Enter");
@@ -54,7 +58,8 @@ create()
  *
  * This extern "C" is mandatory to be managed by TPlugInManager
  */
-extern "C" void 
+extern "C" 
+SYM_EXPORT void 
 destroy(CryptoPlugin* pPlugIn) 
 {
   ALOGV("void destroy(CryptoPlugin* pPlugIn) - Enter : 0x%p", pPlugIn);
@@ -102,12 +107,12 @@ NvCryptoPlugin::~NvCryptoPlugin()
 /*
  * NvCryptoPlugin::requiresSecureDecoderComponent
  */
-bool 
+SYM_EXPORT bool 
 NvCryptoPlugin::requiresSecureDecoderComponent(const char *mime) const
 {
   ALOGV("NvCryptoPlugin::requiresSecureDecoderComponent() - Enter");
 
-  return strncmp(mime, "application/vnd.nagra.drm", strlen("application/vnd.nagra.drm"));
+  return static_cast<bool>(CryptoKernel_NvCryptoPlugin_requiresSecureDecoderComponent(mime));
 }
 
 /*
@@ -140,7 +145,7 @@ String8 NvCryptoPlugin::subSamplesToString(SubSample const *subSamples,
 /*
  * NvCryptoPlugin::decrypt
  */
-ssize_t 
+SYM_EXPORT ssize_t 
 NvCryptoPlugin::decrypt(      bool       secure,
 			const uint8_t    key[16],
 			const uint8_t    iv[16],
@@ -151,16 +156,31 @@ NvCryptoPlugin::decrypt(      bool       secure,
 			      void      *dstPtr,
 			      AString   *errorDetailMsg)
 {
-  ALOGD("NvCryptoPlugin::decrypt(secure=%d, key=%s, iv=%s, mode=%d, src=%p, "
-	"subSamples=%s, dst=%p)",
-	(int)secure,
-	arrayToString(key, sizeof(key)).string(),
-	arrayToString(iv, sizeof(iv)).string(),
-	(int)mode, srcPtr,
-	subSamplesToString(subSamples, numSubSamples).string(),
-	dstPtr);
+  ALOGV("NvCryptoPlugin::decrypt() - Enter");
 
-  
+  char *localErrorDetailMsg = NULL;
+  if (mode != kMode_AES_CTR) {
+    if (errorDetailMsg != (AString *)NULL)
+      {
+	AString localAStringErrorDetailMsg("Invalid encryption mode - Only support AES_CTR !");
+	*errorDetailMsg = localAStringErrorDetailMsg;
+      }
+    return 0;
+  }
+  struct NV_SubSample_st localSubSamples;
+  localSubSamples.mNumBytesOfClearData     = subSamples->mNumBytesOfClearData;
+  localSubSamples.mNumBytesOfEncryptedData = subSamples->mNumBytesOfEncryptedData;
+  ssize_t ret = CryptoKernel_NvCryptoPlugin_decrypt(static_cast<char>(secure),
+						    key, iv,
+						    srcPtr,
+						    &localSubSamples, numSubSamples,
+						    dstPtr,
+						    &localErrorDetailMsg);
+  if (errorDetailMsg != (AString *)NULL)
+    {
+      AString localAStringErrorDetailMsg(localErrorDetailMsg);
+      *errorDetailMsg = localAStringErrorDetailMsg;
+    }
 
-  return OK;
+  return ret;
 }

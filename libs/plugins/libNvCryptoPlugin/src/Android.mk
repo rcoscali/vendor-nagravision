@@ -16,31 +16,33 @@
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
-
 LOCAL_MODULE:= libnvcryptoplugin
-
+LOCAL_MODULE_OWNER := nagravision
 LOCAL_MODULE_TAGS:= optional
+LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib/mediadrm
+LOCAL_SRC_FILES:= nvCryptoPlugin.cpp nvCryptoFactory.cpp
 
-LOCAL_C_INCLUDES:= \
-    $(TOP)/frameworks/av/include \
-    $(TOP)/frameworks/native/include \
-    $(TOP)/frameworks/native/include/media \
-    $(LOCAL_PATH)/../../../utils/include \
-    $(LOCAL_PATH)/../include
+LOCAL_C_INCLUDES:= 			 \
+	$(TOP)/frameworks/av/include 	 \
+	$(TOP)/frameworks/native/include 	 \
+	$(LOCAL_PATH)/../../../utils/include \
+	$(TOP)/frameworks/native/include/media \
+	$(LOCAL_PATH)/../../../cores/cryptokernel/include \
+	$(LOCAL_PATH)/../include
+
+LOCAL_ADDITIONAL_DEPENDENCIES := \
+	libnvcryptokernel \
+	libnvutils
 
 LOCAL_STATIC_LIBRARIES := \
-    libnvutils
+	libnvcryptokernel \
+	libnvutils
 
-LOCAL_SHARED_LIBRARIES := \
-    libmedia \
-    liblog \
-    libcutils
-
-LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)/mediadrm
-
-LOCAL_SRC_FILES:= \
-    nvCryptoFactory.cpp \
-    nvCryptoPlugin.cpp
+LOCAL_SHARED_LIBRARIES += \
+        libstagefright_foundation \
+	liblog \
+	libcutils \
+        libdl
 
 include $(BUILD_SHARED_LIBRARY)
 
