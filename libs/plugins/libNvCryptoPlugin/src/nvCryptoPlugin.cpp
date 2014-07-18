@@ -20,6 +20,7 @@
 #define LOG_TAG "nvCryptoPlugin"
 #include <utils/Log.h>
 
+#include "String8.h"
 #include "drm/DrmAPI.h"
 #include "nvCryptoPlugin.h"
 #include "media/stagefright/MediaErrors.h"
