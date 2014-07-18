@@ -24,6 +24,7 @@ LOCAL_MODULE_TAGS:= optional
 LOCAL_C_INCLUDES:= \
     $(TOP)/frameworks/av/include \
     $(TOP)/frameworks/native/include \
+    $(TOP)/frameworks/native/include/media \
     $(LOCAL_PATH)/../../../utils/include \
     $(LOCAL_PATH)/../include
 
@@ -35,7 +36,7 @@ LOCAL_SHARED_LIBRARIES := \
     liblog \
     libcutils
 
-LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib/mediadrm
+LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)/mediadrm
 
 LOCAL_SRC_FILES:= \
     nvCryptoFactory.cpp \
