@@ -20,7 +20,10 @@
 #define LOG_TAG "nvCryptoPlugin"
 #include <utils/Log.h>
 
+#include "String8.h"
+#include "drm/DrmAPI.h"
 #include "nvCryptoPlugin.h"
+#include "media/stagefright/MediaErrors.h"
 #include "CryptoKernel.h"
 
 using namespace android;
@@ -111,6 +114,33 @@ NvCryptoPlugin::requiresSecureDecoderComponent(const char *mime) const
   ALOGV("NvCryptoPlugin::requiresSecureDecoderComponent() - Enter");
 
   return static_cast<bool>(CryptoKernel_NvCryptoPlugin_requiresSecureDecoderComponent(mime));
+}
+
+/*
+ * Conversion utilities
+ */
+// NvCryptoPlugin::arrayToString
+String8 NvCryptoPlugin::arrayToString(uint8_t const *array, size_t len) const
+{
+  String8 result("{ ");
+  for (size_t i = 0; i < len; i++) {
+    result.appendFormat("0x%02x ", array[i]);
+  }
+  result += "}";
+  return result;
+}
+
+// NvCryptoPlugin::subSamplesToString
+String8 NvCryptoPlugin::subSamplesToString(SubSample const *subSamples,
+					     size_t numSubSamples) const
+{
+  String8 result;
+  for (size_t i = 0; i < numSubSamples; i++) {
+    result.appendFormat("[%d] {clear:%d, encrypted:%d} ", i,
+			subSamples[i].mNumBytesOfClearData,
+			subSamples[i].mNumBytesOfEncryptedData);
+  }
+  return result;
 }
 
 /*

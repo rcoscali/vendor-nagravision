@@ -17,6 +17,8 @@
 #ifndef __NV_CRYPTO_PLUGIN_H__
 #define __NV_CRYPTO_PLUGIN_H__
 
+#include <String8.h>
+
 #include <media/ICrypto.h>
 
 #ifndef SYM_EXPORT
@@ -31,6 +33,11 @@ namespace android {
     NvCryptoPlugin();
     virtual ~NvCryptoPlugin();
 
+  private:
+    String8 arrayToString(uint8_t const *array, size_t len) const;
+    
+    String8 subSamplesToString(SubSample const *subSamples,
+			       size_t numSubSamples) const;
   protected:
     bool requiresSecureDecoderComponent(const char *mime) const;
 

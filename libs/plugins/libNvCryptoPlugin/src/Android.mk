@@ -23,8 +23,10 @@ LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib/mediadrm
 LOCAL_SRC_FILES:= nvCryptoPlugin.cpp nvCryptoFactory.cpp
 
 LOCAL_C_INCLUDES:= 			 \
+	$(TOP)/frameworks/native/include/utils \
 	$(TOP)/frameworks/av/include 	 \
 	$(TOP)/frameworks/native/include 	 \
+	$(TOP)/frameworks/native/include/media \
 	$(LOCAL_PATH)/../../../utils/include \
 	$(LOCAL_PATH)/../../../cores/cryptokernel/include \
 	$(LOCAL_PATH)/../include
@@ -40,7 +42,7 @@ LOCAL_STATIC_LIBRARIES := \
 LOCAL_SHARED_LIBRARIES += \
         libstagefright_foundation \
 	liblog \
-	libcutils \
+	libutils \
         libdl
 
 include $(BUILD_SHARED_LIBRARY)
