@@ -750,3 +750,6 @@ NvDrmPlugin::onPread(int            uniqueId,
   return 0;
 }
 
+// Local Variables:
+// mode:C++
+// End:

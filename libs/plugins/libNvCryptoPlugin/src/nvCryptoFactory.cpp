@@ -65,30 +65,87 @@ NvCryptoFactory::~NvCryptoFactory()
 SYM_EXPORT bool 
 NvCryptoFactory::isCryptoSchemeSupported(const uint8_t uuid[16]) const
 {
-  ALOGV("NvCryptoFactory::isCryptoSchemeSupported() - Enter : uuid='%s'", uuid);
-
+  ALOGV("NvCryptoFactory::isCryptoSchemeSupported() - Enter\n");
+  ALOGV("NvCryptoFactory::isCryptoSchemeSupported - UUID %02x%02x%02x%02x-%02x%02x-%02x%02x-"
+        "%02x%02x-%02x%02x%02x%02x%02x%02x\n",
+        uuid[0], uuid[1], uuid[2], uuid[3], 
+        uuid[4], uuid[5], uuid[6], uuid[7], 
+        uuid[8], uuid[9], uuid[10], uuid[11], 
+        uuid[12], uuid[13], uuid[14], uuid[15]);
+  
   uint8_t nvUuid[16];
 
   /* Nagravision DRM scheme */
-  if (uuid_str2bin(NV_DRM_SCHEME_UUID, nvUuid))
-      if (!uuid_cmp(uuid, nvUuid)) return true;
+  ALOGV("About to test against: %s\n", NV_DRM_SCHEME_UUID);
+  if (uuid_str2bin(NV_DRM_SCHEME_UUID, nvUuid)) 
+    {
+      ALOGV("Testing against: %s\n", NV_DRM_SCHEME_UUID);
+      if (!uuid_cmp(uuid, nvUuid)) 
+        {
+          ALOGV("*** Found a match !\n");
+          return true;
+        }
+      ALOGV("Don't match ...\n");
+    }
 
   /* Microsoft Play Ready DRM scheme */
+  ALOGV("About to test against: %s\n", MSPR_DRM_SCHEME_UUID);
   if (uuid_str2bin(MSPR_DRM_SCHEME_UUID, nvUuid))
-      if (!uuid_cmp(uuid, nvUuid)) return true;
+    {
+      ALOGV("Testing against: %s\n", MSPR_DRM_SCHEME_UUID);
+      if (!uuid_cmp(uuid, nvUuid)) 
+        {
+          ALOGV("*** Found a match !\n");
+          return true;
+        }
+      ALOGV("Don't match ...\n");
+    }
 
   /* DASH IF test 0 DRM scheme */
+  ALOGV("About to test against: %s\n", DASHIF0_DRM_SCHEME_UUID);
   if (uuid_str2bin(DASHIF0_DRM_SCHEME_UUID, nvUuid))
-      if (!uuid_cmp(uuid, nvUuid)) return true;
+    {
+      ALOGV("Testing against: %s\n", DASHIF0_DRM_SCHEME_UUID);
+      if (!uuid_cmp(uuid, nvUuid)) 
+        {
+          ALOGV("*** Found a match !\n");
+          return true;
+        }
+      ALOGV("Don't match ...\n");
+    }
 
   /* DASH IF test 1 DRM scheme */
+  ALOGV("About to test against: %s\n", DASHIF1_DRM_SCHEME_UUID);
   if (uuid_str2bin(DASHIF1_DRM_SCHEME_UUID, nvUuid))
-      if (!uuid_cmp(uuid, nvUuid)) return true;
+    {
+      ALOGV("Testing against: %s\n", DASHIF1_DRM_SCHEME_UUID);
+      if (!uuid_cmp(uuid, nvUuid)) 
+        {
+          ALOGV("*** Found a match !\n");
+          return true;
+        }
+      ALOGV("Don't match ...\n");
+    }
 
   /* DASH IF test 2 DRM scheme */
+  ALOGV("About to test against: %s\n", DASHIF2_DRM_SCHEME_UUID);
   if (uuid_str2bin(DASHIF2_DRM_SCHEME_UUID, nvUuid))
-      if (!uuid_cmp(uuid, nvUuid)) return true;
+    {
+      ALOGV("Testing against: %s\n", DASHIF2_DRM_SCHEME_UUID);
+      if (!uuid_cmp(uuid, nvUuid)) 
+        {
+          ALOGV("*** Found a match !\n");
+          return true;
+        }
+      ALOGV("Don't match ...\n");
+    }
 
+  ALOGV("No match at all for UUID %02x%02x%02x%02x-%02x%02x-%02x%02x-"
+        "%02x%02x-%02x%02x%02x%02x%02x%02x\n",
+        uuid[0], uuid[1], uuid[2], uuid[3], 
+        uuid[4], uuid[5], uuid[6], uuid[7], 
+        uuid[8], uuid[9], uuid[10], uuid[11], 
+        uuid[12], uuid[13], uuid[14], uuid[15]);
   return false;
 }
 
