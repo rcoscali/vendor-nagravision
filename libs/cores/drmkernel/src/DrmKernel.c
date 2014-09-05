@@ -29,6 +29,76 @@
 #define NULL	((void *)0)
 #define NV_ASSERT(msg, expr) if ((expr)) { ALOGE("DrmKernel ASSERT Failure: " msg); exit(1); }
 
+static char *C_databasePath = "/data/drm/nagravision/nv.db";
+static NvDatabaseConnection mDatabaseConnection;
+static int mDatabaseConnectionInitialized = 0;
+
+/*
+ * 
+ */
+#ifdef __cplusplus
+extern "C"
+#endif
+static int
+insertRecord(NvDatabaseConnection* pxDatabaseConnection,
+	     SecureRecord* pxRecord) 
+{
+  int ret = 0;
+
+  if (pxDatabaseConnection && pxRecord)
+    {
+      if (SQLITE_OK == openNvDatabase(pxDatabaseConnection))
+	ret = (insertSecureRecord(pxDatabaseConnection->_pDatabase,
+				  *pxRecord) == SQLITE_OK);
+    }
+  
+  closeNvDatabase(pxDatabaseConnection);
+  
+  return ret;
+}
+
+/*
+ * 
+ */
+#ifdef __cplusplus
+extern "C"
+#endif
+static int 
+getRecord(NvDatabaseConnection* pxDatabaseConnection,
+	  const char* path, SecureRecord* pxRecord) 
+{
+  int ret = 0;
+  
+  if (pxDatabaseConnection && pxRecord) 
+    {
+      if (SQLITE_OK == openNvDatabase(pxDatabaseConnection)) 
+	{
+	  selectSecureRecord(pxDatabaseConnection->_pDatabase,
+			     path, pxRecord); 
+	  
+	  ret = (pxRecord->_dataSize == 0);
+	}
+      
+      closeNvDatabase(pxDatabaseConnection);
+    }
+  
+  return ret;
+}
+
+/*
+ *
+ */
+void
+DrmKernel_init()
+{
+  if (!mDatabaseConnectionInitialized)
+    {
+      mDatabaseConnection._databaseName = C_databasePath ;
+      mDatabaseConnection._pDatabase = (sqlite3*)NULL;
+      mDatabaseConnectionInitialized = 1;
+    }
+}
+
 /*
  *
  */
@@ -56,58 +126,6 @@ DrmInfo_AttributeGet(const struct NV_DrmInfo_st *drmInfo, const char *key, unsig
     *dataSizePtr = sz;
   
   return data;
-}
-
-/*
- * 
- */
-#ifdef __cplusplus
-extern "C"
-#endif
-int
-insertRecord(NvDatabaseConnection* pxDatabaseConnection,
-	     SecureRecord* pxRecord) 
-{
-  int ret = 0;
-
-  if (pxDatabaseConnection && pxRecord)
-    {
-      if (SQLITE_OK == openNvDatabase(pxDatabaseConnection))
-	ret = (insertSecureRecord(pxDatabaseConnection->_pDatabase,
-				  *pxRecord) == SQLITE_OK);
-    }
-  
-  closeNvDatabase(pxDatabaseConnection);
-  
-  return ret;
-}
-
-/*
- * 
- */
-#ifdef __cplusplus
-extern "C"
-#endif
-int 
-getRecord(NvDatabaseConnection* pxDatabaseConnection,
-	  const char* path, SecureRecord* pxRecord) 
-{
-  int ret = 0;
-  
-  if (pxDatabaseConnection && pxRecord) 
-    {
-      if (SQLITE_OK == openNvDatabase(pxDatabaseConnection)) 
-	{
-	  selectSecureRecord(pxDatabaseConnection->_pDatabase,
-			     path, pxRecord); 
-	  
-	  ret = (pxRecord->_dataSize == 0);
-	}
-      
-      closeNvDatabase(pxDatabaseConnection);
-    }
-  
-  return ret;
 }
 
 /*
@@ -149,9 +167,11 @@ DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId, const struct NV_DrmInfo_st 
 
 	    SecureRecord record;
 	    record._key = "PERSO";
-	    record._data = DrmInfo_AttributeGet(drmInfo, "PERSO", &record._dataSize);
+	    record._data = (unsigned char *)DrmInfo_AttributeGet(drmInfo, "PERSO", &record._dataSize);
 
-	    drmInfoStatus->statusCode = insertRecord(&mDatabaseConnection, &record) ? NV_DrmInfoStatus_STATUS_OK : NV_DrmInfoStatus_STATUS_ERROR;
+	    drmInfoStatus->statusCode = 
+	      insertRecord(&mDatabaseConnection, &record) ? 
+	      NV_DrmInfoStatus_STATUS_OK : NV_DrmInfoStatus_STATUS_ERROR;
 	    drmInfoStatus->infoType = NV_DrmInfoRequest_TYPE_REGISTRATION_INFO;
 	    drmInfoStatus->drmBuffer = emptyBuffer;
 	    if (drmInfo->mimeType != NULL)
@@ -159,7 +179,7 @@ DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId, const struct NV_DrmInfo_st 
 	  }
 	  break;
 
-	case DrmInfoRequest::TYPE_UNREGISTRATION_INFO:
+	case NV_DrmInfoRequest_TYPE_UNREGISTRATION_INFO:
 	  {
 	    struct NV_DrmBuffer_st *emptyBuffer = (struct NV_DrmBuffer_st *)malloc(sizeof(struct NV_DrmBuffer_st));
 	    NV_ASSERT("Buffer allocation error\n", emptyBuffer != NULL);
@@ -177,7 +197,7 @@ DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId, const struct NV_DrmInfo_st 
 	  }
 	  break;
 	
-	case DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_INFO:
+	case NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_INFO:
 	  {
 	    struct NV_DrmBuffer_st *buffer = (struct NV_DrmBuffer_st *)malloc(sizeof(struct NV_DrmBuffer_st));
 	    NV_ASSERT("Buffer allocation error\n", buffer != NULL);
@@ -200,4 +220,5 @@ DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId, const struct NV_DrmInfo_st 
 	  break;	  
 	}
     }
+  return drmInfoStatus;
 }

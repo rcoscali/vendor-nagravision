@@ -23,16 +23,18 @@
 #include "DrmKernel.h"
 #include "drmDroidToNv.h"
 
+using namespace android;
+
 /*
  *
  */
 struct NV_DrmInfo_st *
-DrmInfo_droid2nv(DrmInfo *in)
+DrmInfo_droid2nv(const DrmInfo *in)
 {
   if (in == (struct DrmInfo *)NULL)
     {
       // Null entry -> return NULL
-      ALOGE(TAG, "DrmInfo_droid2nv: Invalid null input param\n");
+      ALOGE("DrmInfo_droid2nv: Invalid null input param\n");
       return (struct NV_DrmInfo_st *)NULL;
     }
 
@@ -40,12 +42,12 @@ DrmInfo_droid2nv(DrmInfo *in)
   struct NV_DrmInfo_st *nvDrmInfo = (struct NV_DrmInfo_st *)malloc(sizeof(struct NV_DrmInfo_st));
   if (nvDrmInfo == (struct NV_DrmInfo_st *)NULL)
     {
-      ALOGE(TAG, "DrmInfo_droid2nv: allocation error (1)\n");
+      ALOGE("DrmInfo_droid2nv: allocation error (1)\n");
       return (struct NV_DrmInfo_st *)NULL;
     }
 
   // Copy infoType & mimeType
-  int info_type;
+  int info_type = 0;
   switch (in->getInfoType())
     {
     case NV_DrmInfoRequest_TYPE_REGISTRATION_INFO:
@@ -61,12 +63,13 @@ DrmInfo_droid2nv(DrmInfo *in)
       info_type = DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO;
       break;
     }
+
   nvDrmInfo->infoType = info_type;
   nvDrmInfo->mimeType = strdup(in->getMimeType().string());
   if (nvDrmInfo->mimeType == (char *)NULL)
     {
       free((void *)nvDrmInfo);
-      ALOGE(TAG, "DrmInfo_droid2nv: allocation error (2)\n");
+      ALOGE("DrmInfo_droid2nv: allocation error (2)\n");
       return (struct NV_DrmInfo_st *)NULL;
     }
 
@@ -76,7 +79,7 @@ DrmInfo_droid2nv(DrmInfo *in)
     {
       free((void *)nvDrmInfo->mimeType);
       free((void*)nvDrmInfo);
-      ALOGE(TAG, "DrmInfo_droid2nv: allocation error (3)\n");
+      ALOGE("DrmInfo_droid2nv: allocation error (3)\n");
       return (struct NV_DrmInfo_st *)NULL;
     }
   nvDrmInfo->drmBuffer->length = in->getData().length;
@@ -86,24 +89,27 @@ DrmInfo_droid2nv(DrmInfo *in)
       free((void *)nvDrmInfo->drmBuffer);
       free((void *)nvDrmInfo->mimeType);
       free((void*)nvDrmInfo);
-      ALOGE(TAG, "DrmInfo_droid2nv: allocation error (4)\n");
+      ALOGE("DrmInfo_droid2nv: allocation error (4)\n");
       return (struct NV_DrmInfo_st *)NULL;      
     }
   memcpy((void *)nvDrmInfo->drmBuffer->data, (void *)in->getData().data, nvDrmInfo->drmBuffer->length);
 
   // Copy attributes: iterate 
-  struct NV_DrmInfoAttribute *attrs = (struct NV_DrmInfoAttribute *)NULL;
-  for (DrmInfo::KeyIterator it = in.keyIterator();
+  struct NV_DrmInfoAttribute_st *attrs = (struct NV_DrmInfoAttribute_st *)NULL;
+  for (DrmInfo::KeyIterator it = in->keyIterator();
        it.hasNext();)
     {
+      // Declare these before goto
+      String8 key, val;
+
       // Allocate a new attr struct
       attrs = (struct NV_DrmInfoAttribute_st *)malloc(sizeof(struct NV_DrmInfoAttribute_st));
       if (attrs == (struct NV_DrmInfoAttribute_st *)NULL)
 	goto DrmInfo_droid2nv_err;
 
       // Copy key & value
-      String8 key = it.next();
-      String8 val = in->get(key);
+      key = it.next();
+      val = in->get(key);
       attrs->name = strdup(key.string());
       attrs->value = strdup(val.string());
       if (attrs->name == (char *)NULL || attrs->value == (char *)NULL)
@@ -127,7 +133,7 @@ DrmInfo_droid2nv(DrmInfo *in)
 	  free((void *)nvDrmInfo->drmBuffer);
 	  free((void *)nvDrmInfo->mimeType);
 	  free((void*)nvDrmInfo);
-	  ALOGE(TAG, "DrmInfo_droid2nv: allocation error (5)\n");
+	  ALOGE("DrmInfo_droid2nv: allocation error (5)\n");
 	  return (struct NV_DrmInfo_st *)NULL;      
 	}
 

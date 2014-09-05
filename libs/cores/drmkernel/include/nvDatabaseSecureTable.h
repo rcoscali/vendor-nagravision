@@ -18,6 +18,7 @@
 #define _NVDATABASESECURETABLE_H
 
 #include <string.h>
+
 #include "sqlite3.h"
 
 /**

@@ -17,7 +17,7 @@
 #ifndef __NV_CRYPTO_PLUGIN_H__
 #define __NV_CRYPTO_PLUGIN_H__
 
-#include <String8.h>
+#include <utils/String8.h>
 
 #include <media/ICrypto.h>
 

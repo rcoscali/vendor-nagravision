@@ -19,9 +19,14 @@ include $(CLEAR_VARS)
 LOCAL_MODULE:= libnvdrmplugin
 LOCAL_MODULE_OWNER := nagravision
 LOCAL_MODULE_TAGS := optional
-LOCAL_SRC_FILES:= parseMpdHelpers.cpp nvDrmPlugin.cpp
 LOCAL_CFLAGS := -fvisibility=hidden
 LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib/drm
+
+LOCAL_SRC_FILES:= 		\
+	parseMpdHelpers.cpp 	\
+	nvDrmPlugin.cpp		\
+	drmNvToDroid.cpp	\
+	drmDroidToNv.cpp
 
 LOCAL_C_INCLUDES +=                                                     \
 	$(TOP)/frameworks/native/include/utils                          \
@@ -30,6 +35,7 @@ LOCAL_C_INCLUDES +=                                                     \
 	$(TOP)/external/libxml2/include                                 \
 	$(TOP)/external/icu4c/common                                    \
 	$(TOP)/external/stlport/stlport                                 \
+	$(TOP)/external/sqlite/dist                               	\
 	$(TOP)/bionic                                                   \
 	$(TOP)/bionic/libstdc++/include                                 \
 	$(LOCAL_PATH)/../include                                        \
@@ -39,6 +45,7 @@ LOCAL_SHARED_LIBRARIES := \
 	libdrmframework   \
 	libutils          \
 	libbinder         \
+	libsqlite	  \
 	libicuuc          \
 	liblog            \
 	libcutils         \

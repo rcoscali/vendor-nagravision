@@ -138,6 +138,8 @@ extern "C" {
 
   typedef void (*NV_OnInfoListener_OnInfoPtr)(struct NV_DrmInfoEvent_st *event);
 
+  void DrmKernel_init(void);
+
   //  struct NV_DrmMetadata_st* DrmKernel_NvDrmPlugin_onGetMetadata(int uniqueId, const char *path);
   struct NV_DrmConstraints_st* DrmKernel_NvDrmPlugin_onGetConstraints(int uniqueId, const char *path, int action);
   struct NV_DrmInfoStatus_st* DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId, const struct NV_DrmInfo_st *drmInfo);

@@ -38,6 +38,7 @@
 #include "nvDrmPlugin.h"
 #include "parseMpdHelpers.h"
 #include "drmNvToDroid.h"
+#include "drmDroidToNv.h"
 #include "DrmKernel.h"
 
 #ifdef __cplusplus
@@ -66,7 +67,6 @@ const char* const NvDrmPlugin::sNvMetadata[N_METADATA*2] = {
 };
 
 String8 NvDrmPlugin::cencUuid = String8("urn:mpeg:dash:mp4protection:2011");
-String8 NvDrmPlugin::databasePath = String8("/data/drm/nagravision/nv.db");
 
 #define ADDMAP(x)				\
   static map<const char *, String8> x;		\
@@ -206,9 +206,8 @@ NvDrmPlugin::NvDrmPlugin() :
 {
   ALOGV("NvDrmPlugin::NvDrmPlugin() - Enter");
   mNvDrmMetadata = new DrmMetadata();
-  mDatabaseConnection._databaseName =
-    (char const *) NvDrmPlugin::databasePath;
-  mDatabaseConnection._pDatabase = 0;
+
+  DrmKernel_init();
 
   for (int n = 0; n < N_METADATA / 2; n++) {
     String8 *key = new String8(NvDrmPlugin::sNvMetadata[2 * n]);
@@ -354,6 +353,7 @@ NvDrmPlugin::onSaveRights(int uniqueId,
 {
   ALOGV("NvDrmPlugin::onSaveRights() - Enter : %d", uniqueId);
   status_t retVal = DRM_ERROR_UNKNOWN;
+/*
   SecureRecord record;
   record._key = (const char*) contentPath;
   record._data = (unsigned char*) drmRights.getData().data;
@@ -366,7 +366,7 @@ NvDrmPlugin::onSaveRights(int uniqueId,
     } 
   else 
     ALOGV("NvDrmPlugin::onSaveRights() - Unabble to save rights");
-
+*/
   ALOGV("NvDrmPlugin::onSaveRights() - Exit");
   return retVal;
 }
@@ -386,7 +386,7 @@ NvDrmPlugin::onAcquireDrmInfo(int uniqueId,
       ALOGV("NvDrmPlugin::onAcquireDrmInfo() - NULL drmInfoRequest");
       break;
     }
-
+/*
     String8 dataString("dummy_acquistion_string");
     int length = dataString.length();
     char* data = NULL;
@@ -411,7 +411,7 @@ NvDrmPlugin::onAcquireDrmInfo(int uniqueId,
       }
       break;
     }
-
+*/
     break;
   }
 
@@ -528,6 +528,7 @@ SYM_EXPORT int NvDrmPlugin::onCheckRightsStatus(int uniqueId,
 						const String8 &path, int action) {
   ALOGV("NvDrmPlugin::onCheckRightsStatus() - Enter : %d", uniqueId);
   int rightsStatus = RightsStatus::RIGHTS_NOT_ACQUIRED;
+/*
   for (;;) {
     SecureRecord record;
     record._dataSize = 0;
@@ -547,7 +548,7 @@ SYM_EXPORT int NvDrmPlugin::onCheckRightsStatus(int uniqueId,
 
     break;
   }
-
+*/
   ALOGV("NvDrmPlugin::onCheckRightsStatus() - Exit : %d", uniqueId);
   return rightsStatus;
 }

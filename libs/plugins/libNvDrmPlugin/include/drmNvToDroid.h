@@ -17,12 +17,28 @@
 #ifndef DRM_NV_TO_DROID_H__
 #define DRM_NV_TO_DROID_H__
 
+#include <drm/DrmRights.h>
+#include <drm/DrmConstraints.h>
+#include <drm/DrmMetadata.h>
+#include <drm/DrmInfo.h>
+#include <drm/DrmInfoEvent.h>
+#include <drm/DrmInfoStatus.h>
+#include <drm/DrmConvertedStatus.h>
+#include <drm/DrmInfoRequest.h>
+#include <drm/DrmSupportInfo.h>
+
+#include "DrmKernel.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C" 
+{
+  using namespace android;
 #endif
 
- DrmConstraints *DrmConstraints_nv2droid(struct NV_DrmConstraints_st *in, DrmConstraints **inout);
+  DrmConstraints *DrmConstraints_nv2droid(struct NV_DrmConstraints_st *, DrmConstraints **);
+  DrmBuffer      *DrmBuffer_nv2droid(struct NV_DrmBuffer_st *, DrmBuffer **);
+  DrmInfo        *DrmInfo_nv2droid(struct NV_DrmInfo_st *);
+  DrmInfoStatus  *DrmInfoStatus_nv2droid(struct NV_DrmInfoStatus_st *);
 
 #ifdef __cplusplus
 }

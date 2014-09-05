@@ -38,7 +38,7 @@ DrmConstraints_nv2droid(struct NV_DrmConstraints_st *in, DrmConstraints **inout)
   if (in == (struct NV_DrmConstraints_st *)NULL)
     {
       // Null entry -> return NULL
-      ALOGE(TAG, "DrmConstraints_nv2droid: Invalid null input param\n");
+      ALOGE("DrmConstraints_nv2droid: Invalid null input param\n");
       return (DrmConstraints *)NULL;
     }
 
@@ -50,7 +50,7 @@ DrmConstraints_nv2droid(struct NV_DrmConstraints_st *in, DrmConstraints **inout)
   else 
     {
       // Invalid call with new input object
-      ALOGE(TAG, "DrmConstraints_nv2droid: Invalid null input/output param\n");
+      ALOGE("DrmConstraints_nv2droid: Invalid null input/output param\n");
       return NULL; 
     }
 
@@ -58,13 +58,8 @@ DrmConstraints_nv2droid(struct NV_DrmConstraints_st *in, DrmConstraints **inout)
 
   while (cur)
     {
-      someDrmConstraints->put((const String8 *)new String8(localConstraints->key), 
-			      localConstraints->value);
+      (*inout)->put((const String8 *)new String8(in->key), in->value);
       cur = cur->next;
-      if (localConstraints->key) free(localConstraints->key);
-      if (localConstraints->value) free(localConstraints->value);
-      free(localConstraints);
-      localConstraints = cur;
     }
   
   return *inout;    
@@ -80,12 +75,12 @@ DrmConstraints_nv2droid(struct NV_DrmConstraints_st *in, DrmConstraints **inout)
  * @return 	pointer on DrmBuffer object. Is NULL is inout is NULL.
  */
 DrmBuffer *
-DrmBuffer_nv2droid(struct NV_DrmBuffer_st *in, DrmBuffer **inout);
+DrmBuffer_nv2droid(struct NV_DrmBuffer_st *in, DrmBuffer **inout)
 {
   if (in == (struct NV_DrmBuffer_st *)NULL)
     {
       // Null entry -> return NULL
-      ALOGE(TAG, "DrmBuffer_nv2droid: Invalid null input param\n");
+      ALOGE("DrmBuffer_nv2droid: Invalid null input param\n");
       return (DrmBuffer *)NULL;
     }
 
@@ -99,14 +94,14 @@ DrmBuffer_nv2droid(struct NV_DrmBuffer_st *in, DrmBuffer **inout);
   else 
     {
       // Invalid call with new input object
-      ALOGE(TAG, "DrmBuffer_nv2droid: Invalid null input/output param\n");
+      ALOGE("DrmBuffer_nv2droid: Invalid null input/output param\n");
       return NULL; 
     }
 
   if (in->data != (char *)NULL && in->length > 0)
     {
-      *inout->data = (char *)malloc(in->length);
-      memcpy(*inout->data, in->data);
+      (*inout)->data = (char *)malloc(in->length);
+      memcpy((*inout)->data, in->data, in->length);
     }
 
   return (*inout);
@@ -121,16 +116,16 @@ DrmBuffer_nv2droid(struct NV_DrmBuffer_st *in, DrmBuffer **inout);
  * @return 	pointer on DrmInfo object. Is NULL is inout is NULL.
  */
 DrmInfo *
-DrmInfo_nv2droid(struct NV_DrmInfo_st *in);
+DrmInfo_nv2droid(struct NV_DrmInfo_st *in)
 {
   if (in == (struct NV_DrmInfo_st *)NULL)
     {
       // Null entry -> return NULL
-      ALOGE(TAG, "DrmInfo_nv2droid: Invalid null input param\n");
+      ALOGE("DrmInfo_nv2droid: Invalid null input param\n");
       return (DrmInfo *)NULL;
     }
 
-  int info_type;
+  int info_type = 0;
   switch(in->infoType)
     {
     case DrmInfoRequest::TYPE_REGISTRATION_INFO:
@@ -146,13 +141,16 @@ DrmInfo_nv2droid(struct NV_DrmInfo_st *in);
       info_type = NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO;
       break;
     }
-  DrmInfo *info = new DrmInfo(info_type, DrmBuffer_nv2droid(in->drmBuffer, NULL), in->mimeType);
+
+  DrmInfo *info = new DrmInfo(info_type, 
+			      *DrmBuffer_nv2droid(in->drmBuffer, NULL), 
+			      String8(in->mimeType));
   if (info != (DrmInfo *)NULL)
     {
-      struct NV_DrmInfoAttribute *attr = in->attributes;
+      struct NV_DrmInfoAttribute_st *attr = in->pattributes;
       while (attr)
 	{
-	  info->put(attr->name, attr->value);
+	  info->put(String8(attr->name), String8(attr->value));
 	  attr = attr->next;
 	}
     }
@@ -169,16 +167,36 @@ DrmInfo_nv2droid(struct NV_DrmInfo_st *in);
  * @return 	pointer on DrmInfoStatus object. Is NULL is inout is NULL.
  */
 DrmInfoStatus *
-DrmInfoStatus_nv2droid(struct NV_DrmInfoStatus_st *in);
+DrmInfoStatus_nv2droid(struct NV_DrmInfoStatus_st *in)
 {
   if (in == (struct NV_DrmInfoStatus_st *)NULL)
     {
       // Null entry -> return NULL
-      ALOGE(TAG, "DrmInfoStatus_nv2droid: Invalid null input param\n");
+      ALOGE("DrmInfoStatus_nv2droid: Invalid null input param\n");
       return (DrmInfoStatus *)NULL;
     }
 
-  DrmInfoStatus *infoStatus = new DrmInfoStatus(in->statusCode, in->infoType, DrmBuffer_nv2droid(in->drmBuffer, NULL), in->mimeType);
+  int info_type = 0;
+  switch(in->infoType)
+    {
+    case NV_DrmInfoRequest_TYPE_REGISTRATION_INFO:
+      info_type = DrmInfoRequest::TYPE_REGISTRATION_INFO;
+      break;
+    case NV_DrmInfoRequest_TYPE_UNREGISTRATION_INFO:
+      info_type = DrmInfoRequest::TYPE_UNREGISTRATION_INFO;
+      break;
+    case NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_INFO:
+      info_type = DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_INFO;
+      break;
+    case NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO:
+      info_type = DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO;
+      break;
+    }
+
+  DrmInfoStatus *infoStatus = new DrmInfoStatus(in->statusCode, 
+						info_type, 
+						DrmBuffer_nv2droid(in->drmBuffer, NULL), 
+						String8(in->mimeType));
 
   return infoStatus;
 }

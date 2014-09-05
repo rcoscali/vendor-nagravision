@@ -21,7 +21,7 @@
 
 /**
  *@brief
- *  Deifine the database connection structure
+ *  Define the database connection structure
  */
 typedef struct NvDatabaseConnection 
 {
