@@ -40,18 +40,26 @@ extern "C" {
     int length;
   };
 
-  struct NV_DrmInfoAttribute {
-    struct NV_DrmInfoAttribute *next;
+  struct NV_DrmInfoAttribute_st {
+    struct NV_DrmInfoAttribute_st *next;
     char *name;
     char *value;
   };
+
+#define NV_DrmInfoRequest_TYPE_REGISTRATION_INFO 		1
+#define NV_DrmInfoRequest_TYPE_UNREGISTRATION_INFO 		2
+#define NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_INFO 		3
+#define NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO 4
 
   struct NV_DrmInfo_st {
     int infoType;
     struct NV_DrmBuffer_st *drmBuffer;
     char *mimeType;
-    struct NV_DrmInfoAttribute *attributes;
+    struct NV_DrmInfoAttribute_st *pattributes;
   };
+
+#define NV_DrmInfoStatus_STATUS_OK	1
+#define NV_DrmInfoStatus_STATUS_ERROR	2
 
   struct NV_DrmInfoStatus_st {
     int statusCode;
