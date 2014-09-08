@@ -48,6 +48,8 @@ extern "C"{
 #include "nvDatabaseSecureTable.h"
 #include "sqlite3.h"
 
+#define NV_ASSERT(msg, expr) if (!(expr)) { ALOGE("nvDrmPlugin: FATAL alloc error <" msg ">"); exit(255); }
+
 #ifdef __cplusplus
 }
 #endif
@@ -275,6 +277,7 @@ NvDrmPlugin::onProcessDrmInfo(int uniqueId, const DrmInfo *drmInfo)
   ALOGV("NvDrmPlugin::onProcessDrmInfo() - Enter : %d", uniqueId);
 
   struct NV_DrmInfo_st *localDrmInfo = DrmInfo_droid2nv(drmInfo);
+  NV_ASSERT("on DrmInfo", localDrmInfo);
   struct NV_DrmInfoStatus_st *localDrmInfoStatus = DrmKernel_NvDrmPlugin_onProcessDrmInfo(uniqueId, localDrmInfo);
   DrmInfoStatus *drmInfoStatus = DrmInfoStatus_nv2droid(localDrmInfoStatus);
 
@@ -353,20 +356,14 @@ NvDrmPlugin::onSaveRights(int uniqueId,
 {
   ALOGV("NvDrmPlugin::onSaveRights() - Enter : %d", uniqueId);
   status_t retVal = DRM_ERROR_UNKNOWN;
-/*
-  SecureRecord record;
-  record._key = (const char*) contentPath;
-  record._data = (unsigned char*) drmRights.getData().data;
-  record._dataSize = drmRights.getData().length;
 
-  if (insertRecord(&mDatabaseConnection, &record)) 
-    {
-      retVal = DRM_NO_ERROR;
-      ALOGV("NvDrmPlugin::onSaveRights() - Rights saved");
-    } 
-  else 
-    ALOGV("NvDrmPlugin::onSaveRights() - Unabble to save rights");
-*/
+  struct NV_DrmRights_st *localDrmRights = DrmRights_droid2nv(&drmRights);
+  NV_ASSERT("on DrmRights", localDrmRights);
+  retVal = DrmKernel_NvDrmPlugin_onSaveRights(uniqueId, 
+				  localDrmRights, 
+				  rightsPath.string(), 
+				  contentPath.string());
+
   ALOGV("NvDrmPlugin::onSaveRights() - Exit");
   return retVal;
 }
@@ -381,39 +378,9 @@ NvDrmPlugin::onAcquireDrmInfo(int uniqueId,
   ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Enter : %d", uniqueId);
   DrmInfo* drmInfo = NULL;
 
-  for (;;) {
-    if (NULL == drmInfoRequest) {
-      ALOGV("NvDrmPlugin::onAcquireDrmInfo() - NULL drmInfoRequest");
-      break;
-    }
-/*
-    String8 dataString("dummy_acquistion_string");
-    int length = dataString.length();
-    char* data = NULL;
-    data = new char[length];
-    memcpy(data, dataString.string(), length);
-    drmInfo = new DrmInfo(drmInfoRequest->getInfoType(),
-			  DrmBuffer(data, length), drmInfoRequest->getMimeType());
-
-    if (DrmInfoRequest::TYPE_REGISTRATION_INFO
-	== drmInfoRequest->getInfoType()) {
-      String8 key("PERSO");
-      String8 yes("YES");
-      SecureRecord record;
-      record._dataSize = 0;
-      // check is the device is registered
-      if (getRecord(&mDatabaseConnection, key, &record)) {
-	drmInfo->put(key, yes);
-	String8 persodata((const char*) record._data, record._dataSize);
-	String8 uniqueid("UNIQUE_ID");
-	drmInfo->put(uniqueid, persodata);
-
-      }
-      break;
-    }
-*/
-    break;
-  }
+  struct NV_DrmInfoRequest_st *localDrmInfoRequest = DrmInfoRequest_droid2nv(drmInfoRequest);
+  NV_ASSERT("on DrmInfoRequest", localDrmInfoRequest);
+  drmInfo = DrmInfo_nv2droid(DrmKernel_NvDrmPlugin_onAcquireDrmInfo(uniqueId, localDrmInfoRequest));
 
   ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Exit");
   return drmInfo;
@@ -524,31 +491,12 @@ NvDrmPlugin::onGetDrmObjectType(      int      uniqueId,
 /*
  * NvDrmPlugin::onCheckRightsStatus
  */
-SYM_EXPORT int NvDrmPlugin::onCheckRightsStatus(int uniqueId,
-						const String8 &path, int action) {
+SYM_EXPORT int 
+NvDrmPlugin::onCheckRightsStatus(int uniqueId, const String8 &path, int action) 
+{
   ALOGV("NvDrmPlugin::onCheckRightsStatus() - Enter : %d", uniqueId);
   int rightsStatus = RightsStatus::RIGHTS_NOT_ACQUIRED;
-/*
-  for (;;) {
-    SecureRecord record;
-    record._dataSize = 0;
-    if (!getRecord(&mDatabaseConnection, path, &record)) {
-      ALOGV(
-	    "NvDrmPlugin::onCheckRightsStatus() - unable to get rights for %s",
-	    (const char* )path);
-      break;
-    }
 
-    String8 temp((const char*) record._data, record._dataSize);
-    if (strcmp(temp, "0") == 0) {
-      rightsStatus = RightsStatus::RIGHTS_EXPIRED;
-    } else {
-      rightsStatus = RightsStatus::RIGHTS_VALID;
-    }
-
-    break;
-  }
-*/
   ALOGV("NvDrmPlugin::onCheckRightsStatus() - Exit : %d", uniqueId);
   return rightsStatus;
 }
@@ -643,6 +591,7 @@ NvDrmPlugin::onConvertData(      int        uniqueId,
       convertedData = new DrmBuffer(data, length);
       memcpy(convertedData->data, inputData->data, length);
     }
+
   return new DrmConvertedStatus(DrmConvertedStatus::STATUS_OK, convertedData, 0 /*offset*/);
 }
 

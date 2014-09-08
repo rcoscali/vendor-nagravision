@@ -35,7 +35,9 @@ extern "C"
   using namespace android;
 #endif
 
-  struct NV_DrmInfo_st *DrmInfo_droid2nv(const DrmInfo *in);
+  struct NV_DrmInfo_st *DrmInfo_droid2nv(const DrmInfo *);
+  struct NV_DrmRights_st *DrmRights_droid2nv(const DrmRights *);
+  struct NV_DrmInfoRequest_st *DrmInfoRequest_droid2nv(const DrmInfoRequest *);
 
 #ifdef __cplusplus
 }

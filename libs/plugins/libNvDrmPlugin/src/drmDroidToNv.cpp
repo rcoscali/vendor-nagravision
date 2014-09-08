@@ -25,6 +25,8 @@
 
 using namespace android;
 
+#define NV_ASSERT(msg, expr) if ((expr)) { ALOGE("drmDroidToNv ASSERT Failure: " msg); exit(1); }
+
 /*
  *
  */
@@ -149,4 +151,136 @@ DrmInfo_droid2nv(const DrmInfo *in)
     }
 
   return nvDrmInfo;
+}
+
+/*
+ *
+ */
+struct NV_DrmRights_st *
+DrmRights_droid2nv(const DrmRights *drmRights)
+{
+  struct NV_DrmRights_st *nvDrmRights = (struct NV_DrmRights_st *)malloc(sizeof(struct NV_DrmRights_st));
+  NV_ASSERT("on nvDrmRights", nvDrmRights);
+  bzero(nvDrmRights, sizeof(struct NV_DrmRights_st));
+  
+  nvDrmRights->data = (struct NV_DrmBuffer_st *)malloc(sizeof(struct NV_DrmBuffer_st));
+  NV_ASSERT("on nvDrmRights:data", nvDrmRights->data);
+  nvDrmRights->data->length = drmRights->getData().length;
+  nvDrmRights->data->data = (char *)malloc(drmRights->getData().length);
+  NV_ASSERT("on nvDrmRights:data:data", nvDrmRights->data->data);
+  memcpy((void *)nvDrmRights->data->data, 
+	 (const void *)drmRights->getData().data,
+	 drmRights->getData().length);
+
+  if (!drmRights->getMimeType().isEmpty())
+    {
+      nvDrmRights->mimeType = (char *)strdup(drmRights->getMimeType().string());
+      NV_ASSERT("on nvDrmRights:mimeType", nvDrmRights->mimeType);
+    }
+  else
+    nvDrmRights->mimeType = NULL;
+  
+  if (!drmRights->getAccountId().isEmpty())
+    {
+      nvDrmRights->accountId = (char *)strdup(drmRights->getMimeType().string());
+      NV_ASSERT("on nvDrmRights:accountId", nvDrmRights->accountId);
+    }
+  else
+    nvDrmRights->accountId = NULL;
+  
+  if (!drmRights->getSubscriptionId().isEmpty())
+    {
+      nvDrmRights->subscriptionId = (char *)strdup(drmRights->getMimeType().string());
+      NV_ASSERT("on nvDrmRights:subscriptionId", nvDrmRights->subscriptionId);
+    }
+  else
+    nvDrmRights->subscriptionId = NULL;
+
+  return nvDrmRights;
+}
+
+struct NV_DrmInfoRequest_st *
+DrmInfoRequest_droid2nv(const DrmInfoRequest *drmInfoRequest)
+{
+  struct NV_DrmInfoRequest_st *nvDrmInfoRequest = (struct NV_DrmInfoRequest_st *)malloc(sizeof(struct NV_DrmInfoRequest_st));
+  NV_ASSERT("on DrmInfoRequest", nvDrmInfoRequest);
+
+  // Copy infoType & mimeType
+  int info_type = 0;
+  switch (drmInfoRequest->getInfoType())
+    {
+    case DrmInfoRequest::TYPE_REGISTRATION_INFO:
+      info_type = NV_DrmInfoRequest_TYPE_REGISTRATION_INFO;
+      break;
+    case DrmInfoRequest::TYPE_UNREGISTRATION_INFO:
+      info_type = NV_DrmInfoRequest_TYPE_UNREGISTRATION_INFO;
+      break;
+    case DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_INFO:
+      info_type = NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_INFO;
+      break;
+    case DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO:
+      info_type = NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO;
+      break;
+    }
+
+  nvDrmInfoRequest->infoType = info_type;
+
+  nvDrmInfoRequest->mimeType = (char *)strdup(drmInfoRequest->getMimeType().string());
+  NV_ASSERT("on DrmInfoRequest", nvDrmInfoRequest->mimeType);
+
+  // Copy attributes: iterate 
+  struct NV_DrmRequestInfoMapNode_st *mapNode = (struct NV_DrmRequestInfoMapNode_st *)NULL;
+  for (DrmInfoRequest::KeyIterator it = drmInfoRequest->keyIterator();
+       it.hasNext();)
+    {
+      // Declare these before goto
+      String8 key, val;
+
+      // Allocate a new attr struct
+      mapNode = (struct NV_DrmRequestInfoMapNode_st *)malloc(sizeof(struct NV_DrmRequestInfoMapNode_st));
+      if (mapNode == (struct NV_DrmRequestInfoMapNode_st *)NULL)
+	goto DrmInfoRequest_droid2nv_err;
+
+      // Copy key & value
+      key = it.next();
+      val = drmInfoRequest->get(key);
+      mapNode->key = strdup(key.string());
+      mapNode->value = strdup(val.string());
+      if (mapNode->key == (char *)NULL || mapNode->value == (char *)NULL)
+	{
+	  // If an error occured
+	  if (mapNode->key != (char *)NULL) free((void *)mapNode->key);
+	  if (mapNode->value != (char *)NULL) free((void *)mapNode->value);
+
+	DrmInfoRequest_droid2nv_err:
+	  // Free list of mapNode
+	  while (nvDrmInfoRequest->requestInformationMap) 
+	    {
+	      struct NV_DrmRequestInfoMapNode_st *tmp = nvDrmInfoRequest->requestInformationMap->next;
+	      if (nvDrmInfoRequest->requestInformationMap->key != (char *)NULL)
+		free((void *)nvDrmInfoRequest->requestInformationMap->key);
+	      if (nvDrmInfoRequest->requestInformationMap->value != (char *)NULL)
+		free((void *)nvDrmInfoRequest->requestInformationMap->value);
+	      nvDrmInfoRequest->requestInformationMap = tmp;
+	    }
+
+	  free((void *)nvDrmInfoRequest->mimeType);
+	  free((void*)nvDrmInfoRequest);
+	  ALOGE("DrmInfo_droid2nv: allocation error (5)\n");
+	  return (struct NV_DrmInfoRequest_st *)NULL;      
+	}
+
+      // This attr copy succeded, add it at list tail
+      if (nvDrmInfoRequest->requestInformationMap == (struct NV_DrmRequestInfoMapNode_st *)NULL)
+	nvDrmInfoRequest->requestInformationMap = mapNode;
+      else
+	{
+	  struct NV_DrmRequestInfoMapNode_st *tmp = nvDrmInfoRequest->requestInformationMap;
+	  while (tmp->next != (struct NV_DrmRequestInfoMapNode_st *)NULL) tmp = tmp->next;
+	  tmp->next = mapNode;
+	}
+    }
+
+  
+  return nvDrmInfoRequest;
 }
