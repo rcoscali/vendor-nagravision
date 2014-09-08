@@ -39,7 +39,13 @@ static NvDatabaseConnection mDatabaseConnection;
 static int mDatabaseConnectionInitialized = 0;
 
 /*
- * 
+ * @brief
+ *   Utility func for inserting a SecureRecord in the DRM DB
+ *
+ * @param pxDatabaseConnection pointer to a struct describing the DB connection
+ * @param pxRecord pointer to the record to insert
+ *
+ * @return 1 if record was successfully inserted. 0 otherwise
  */
 #ifdef __cplusplus
 extern "C"
@@ -63,7 +69,14 @@ insertRecord(NvDatabaseConnection* pxDatabaseConnection,
 }
 
 /*
- * 
+ * @brief
+ *   Utility func for getting a record from DB
+ *
+ * @param pxDatabaseConnection pointer to a struct describing the DB connection
+ * @param path 		allows to select the record to read from DB
+ * @param pxRecord 	record read from DB and returned to rhe caller
+ *
+ * @return 1 if record was read successfully. 0 otherwise
  */
 #ifdef __cplusplus
 extern "C"
@@ -91,7 +104,8 @@ getRecord(NvDatabaseConnection* pxDatabaseConnection,
 }
 
 /*
- *
+ * @brief
+ *   Initialize the DB connection. Called from the NvDrmPlugin constructor
  */
 void
 DrmKernel_init()
@@ -105,7 +119,15 @@ DrmKernel_init()
 }
 
 /*
+ * @brief
+ *   Helper func for accessing attributes from the NV_DrmInfo_st structure.
  *
+ * @param drmInfo 	the NV_DrmInfo_st pointer from which to read attributes
+ * @param key 		the key of the attribute to read
+ * @param dataSizePtr	size of the attribute value if attribute was found for key
+ *
+ * @returns attribute value found for key 'key'. If noi attribute was found for key
+ *          'key', returns NULL
  */
 char *
 DrmInfo_AttributeGet(const struct NV_DrmInfo_st *drmInfo, const char *key, unsigned int *dataSizePtr)
