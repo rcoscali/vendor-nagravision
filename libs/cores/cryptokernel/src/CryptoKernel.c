@@ -68,7 +68,11 @@ ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure,
   AES_KEY openSSLKey;
   
   if (AES_set_encrypt_key(key, AES_BLOCK_SIZE * 8, &openSSLKey) < 0) 
-    ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Unable to set decryption key\n");
+    {
+      ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Unable to set decryption key\n");
+      if (errorDetailMsg != NULL)
+        *errorDetailMsg = "Invalid key";
+    }
   
   else
     {
@@ -90,10 +94,15 @@ ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure,
       bzero(ecount, AES_BLOCK_SIZE);
       if (dataSize == 0 || 
 	  (subSamples->mNumBytesOfEncryptedData % AES_BLOCK_SIZE) != 0 ||
-	  subSamples->mNumBytesOfEncryptedData == 0) 
-	ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Wrong buffer data size >%lu - %d<"
-	      " (empty or not multiple of 16 bytes)\n", 
-	      dataSize, subSamples->mNumBytesOfEncryptedData);
+          subSamples->mNumBytesOfEncryptedData == 0)
+        {
+          ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Wrong buffer data size >%lu - %d<"
+                " (empty or not multiple of 16 bytes)\n", 
+                dataSize, subSamples->mNumBytesOfEncryptedData);
+          if (errorDetailMsg != NULL)
+            *errorDetailMsg = "Invalid size";
+          dataSize = 0;
+        }
 	  
       else
 	{
@@ -103,13 +112,13 @@ ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure,
 	  if (subSamples->mNumBytesOfClearData > 0) 
 	    memcpy(pOutBuffer, pInBuffer, subSamples->mNumBytesOfClearData);
 	  
-	  uint32_t i = 0;
-	  for (i = subSamples->mNumBytesOfClearData;
-	       i < dataSize; 
-	       i += AES_BLOCK_SIZE) 
+          uint32_t i = 0;
+          for (i = subSamples->mNumBytesOfClearData;
+               i < dataSize; 
+               i += AES_BLOCK_SIZE) 
             AES_ctr128_encrypt(pInBuffer + i, pOutBuffer + i, 
                                AES_BLOCK_SIZE, (const AES_KEY *)&openSSLKey, 
-                               (unsigned char *)iv, ecount, &num);		      
+                               (unsigned char *)iv, ecount, &num);
 	}
     }
 

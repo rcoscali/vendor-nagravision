@@ -159,7 +159,9 @@ NvCryptoPlugin::decrypt(      bool       secure,
 {
   ALOGV("NvCryptoPlugin::decrypt() - Enter");
 
+  ALOGV("mode = %d\n", mode);
   char *localErrorDetailMsg = NULL;
+
   if (mode != kMode_AES_CTR) {
     if (errorDetailMsg != (AString *)NULL)
       {
@@ -169,6 +171,7 @@ NvCryptoPlugin::decrypt(      bool       secure,
       }
     return 0;
   }
+
   struct NV_SubSample_st localSubSamples;
   localSubSamples.mNumBytesOfClearData     = subSamples->mNumBytesOfClearData;
   localSubSamples.mNumBytesOfEncryptedData = subSamples->mNumBytesOfEncryptedData;
