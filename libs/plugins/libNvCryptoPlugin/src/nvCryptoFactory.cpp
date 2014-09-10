@@ -59,6 +59,16 @@ NvCryptoFactory::~NvCryptoFactory()
  * Implementation of the CryptoFactory
  * ==========================================================================*/
 
+#define TEST_UUID_MATCH(x)  \
+  if (uuid_str2bin((x), nvUuid) == NV_OK)               \
+    {							\
+      if (!uuid_cmp(uuid, nvUuid)) 			\
+        {						\
+          ALOGV("*** Found a match !\n");		\
+          return true;					\
+        }						\
+    }
+
 /*
  * NvCryptoFactory::isCryptoSchemeSupported
  */
@@ -76,69 +86,15 @@ NvCryptoFactory::isCryptoSchemeSupported(const uint8_t uuid[16]) const
   uint8_t nvUuid[16];
 
   /* Nagravision DRM scheme */
-  ALOGV("About to test against: %s\n", NV_DRM_SCHEME_UUID);
-  if (uuid_str2bin(NV_DRM_SCHEME_UUID, nvUuid)) 
-    {
-      ALOGV("Testing against: %s\n", NV_DRM_SCHEME_UUID);
-      if (!uuid_cmp(uuid, nvUuid)) 
-        {
-          ALOGV("*** Found a match !\n");
-          return true;
-        }
-      ALOGV("Don't match ...\n");
-    }
-
+  TEST_UUID_MATCH(NV_DRM_SCHEME_UUID);
   /* Microsoft Play Ready DRM scheme */
-  ALOGV("About to test against: %s\n", MSPR_DRM_SCHEME_UUID);
-  if (uuid_str2bin(MSPR_DRM_SCHEME_UUID, nvUuid))
-    {
-      ALOGV("Testing against: %s\n", MSPR_DRM_SCHEME_UUID);
-      if (!uuid_cmp(uuid, nvUuid)) 
-        {
-          ALOGV("*** Found a match !\n");
-          return true;
-        }
-      ALOGV("Don't match ...\n");
-    }
-
+  TEST_UUID_MATCH(MSPR_DRM_SCHEME_UUID);
   /* DASH IF test 0 DRM scheme */
-  ALOGV("About to test against: %s\n", DASHIF0_DRM_SCHEME_UUID);
-  if (uuid_str2bin(DASHIF0_DRM_SCHEME_UUID, nvUuid))
-    {
-      ALOGV("Testing against: %s\n", DASHIF0_DRM_SCHEME_UUID);
-      if (!uuid_cmp(uuid, nvUuid)) 
-        {
-          ALOGV("*** Found a match !\n");
-          return true;
-        }
-      ALOGV("Don't match ...\n");
-    }
-
+  TEST_UUID_MATCH(DASHIF0_DRM_SCHEME_UUID);
   /* DASH IF test 1 DRM scheme */
-  ALOGV("About to test against: %s\n", DASHIF1_DRM_SCHEME_UUID);
-  if (uuid_str2bin(DASHIF1_DRM_SCHEME_UUID, nvUuid))
-    {
-      ALOGV("Testing against: %s\n", DASHIF1_DRM_SCHEME_UUID);
-      if (!uuid_cmp(uuid, nvUuid)) 
-        {
-          ALOGV("*** Found a match !\n");
-          return true;
-        }
-      ALOGV("Don't match ...\n");
-    }
-
+  TEST_UUID_MATCH(DASHIF1_DRM_SCHEME_UUID);
   /* DASH IF test 2 DRM scheme */
-  ALOGV("About to test against: %s\n", DASHIF2_DRM_SCHEME_UUID);
-  if (uuid_str2bin(DASHIF2_DRM_SCHEME_UUID, nvUuid))
-    {
-      ALOGV("Testing against: %s\n", DASHIF2_DRM_SCHEME_UUID);
-      if (!uuid_cmp(uuid, nvUuid)) 
-        {
-          ALOGV("*** Found a match !\n");
-          return true;
-        }
-      ALOGV("Don't match ...\n");
-    }
+  TEST_UUID_MATCH(DASHIF2_DRM_SCHEME_UUID);
 
   ALOGV("No match at all for UUID %02x%02x%02x%02x-%02x%02x-%02x%02x-"
         "%02x%02x-%02x%02x%02x%02x%02x%02x\n",
@@ -146,7 +102,7 @@ NvCryptoFactory::isCryptoSchemeSupported(const uint8_t uuid[16]) const
         uuid[4], uuid[5], uuid[6], uuid[7], 
         uuid[8], uuid[9], uuid[10], uuid[11], 
         uuid[12], uuid[13], uuid[14], uuid[15]);
-  return false;
+  return true;
 }
 
 /*

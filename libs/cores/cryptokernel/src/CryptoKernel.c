@@ -15,6 +15,13 @@
  */
 
 #include <string.h>
+#include <strings.h>
+
+#define LOG_NDEBUG 0
+#define LOG_TAG "CryptoKernel"
+#include <utils/Log.h>
+
+#include <openssl/aes.h>
 
 #include "CryptoKernel.h"
 
@@ -55,6 +62,57 @@ ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure,
 					    void *dstPtr, 
 					    char **errorDetailMsg)
 {
-  *errorDetailMsg = strdup("Not yet implemented !!");
-  return 0;
+  ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Enter");
+
+  unsigned long dataSize = 0;  
+  AES_KEY openSSLKey;
+  
+  if (AES_set_encrypt_key(key, AES_BLOCK_SIZE * 8, &openSSLKey) < 0) 
+    ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Unable to set decryption key\n");
+  
+  else
+    {
+      unsigned int num = 0;
+      unsigned char ecount[AES_BLOCK_SIZE];
+
+      dataSize = subSamples->mNumBytesOfEncryptedData 
+	+ subSamples->mNumBytesOfClearData;
+	  
+      ALOGI("===========================================================================\n");
+      ALOGI("AES_KEY: 0x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+	    key[0],  key[1],  key[2],  key[3],  key[4],  key[5],  key[6],  key[7], 
+	    key[8],  key[9],  key[10], key[11], key[12], key[13], key[14], key[15]);
+      ALOGI("Num Bytes Of Clear Data: %d\n", subSamples->mNumBytesOfClearData);
+      ALOGI("Num Bytes Of Encrypted Data: %d\n", subSamples->mNumBytesOfEncryptedData);
+      ALOGI("Data Size: %lu\n", dataSize);
+      ALOGI("===========================================================================\n");
+
+      bzero(ecount, AES_BLOCK_SIZE);
+      if (dataSize == 0 || 
+	  (subSamples->mNumBytesOfEncryptedData % AES_BLOCK_SIZE) != 0 ||
+	  subSamples->mNumBytesOfEncryptedData == 0) 
+	ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Wrong buffer data size >%lu - %d<"
+	      " (empty or not multiple of 16 bytes)\n", 
+	      dataSize, subSamples->mNumBytesOfEncryptedData);
+	  
+      else
+	{
+	  unsigned char* pInBuffer = (unsigned char*) srcPtr;
+	  unsigned char* pOutBuffer = (unsigned char*) dstPtr;
+	  
+	  if (subSamples->mNumBytesOfClearData > 0) 
+	    memcpy(pOutBuffer, pInBuffer, subSamples->mNumBytesOfClearData);
+	  
+	  uint32_t i = 0;
+	  for (i = subSamples->mNumBytesOfClearData;
+	       i < dataSize; 
+	       i += AES_BLOCK_SIZE) 
+            AES_ctr128_encrypt(pInBuffer + i, pOutBuffer + i, 
+                               AES_BLOCK_SIZE, (const AES_KEY *)&openSSLKey, 
+                               (unsigned char *)iv, ecount, &num);		      
+	}
+    }
+
+  ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Exit");
+  return dataSize;
 }

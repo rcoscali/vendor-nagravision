@@ -73,7 +73,7 @@ insertRecord(NvDatabaseConnection* pxDatabaseConnection,
  *   Utility func for getting a record from DB
  *
  * @param pxDatabaseConnection pointer to a struct describing the DB connection
- * @param path 		allows to select the record to read from DB
+ * @param pxPath 	allows to select the record to read from DB
  * @param pxRecord 	record read from DB and returned to rhe caller
  *
  * @return 1 if record was read successfully. 0 otherwise
@@ -83,7 +83,7 @@ extern "C"
 #endif
 static int 
 getRecord(NvDatabaseConnection* pxDatabaseConnection,
-	  const char* path, SecureRecord* pxRecord) 
+	  const char* pxPath, SecureRecord* pxRecord) 
 {
   int ret = 0;
   
@@ -92,7 +92,7 @@ getRecord(NvDatabaseConnection* pxDatabaseConnection,
       if (SQLITE_OK == openNvDatabase(pxDatabaseConnection)) 
 	{
 	  selectSecureRecord(pxDatabaseConnection->_pDatabase,
-			     path, pxRecord); 
+			     pxPath, pxRecord); 
 	  
 	  ret = (pxRecord->_dataSize == 0);
 	}
@@ -108,7 +108,7 @@ getRecord(NvDatabaseConnection* pxDatabaseConnection,
  *   Initialize the DB connection. Called from the NvDrmPlugin constructor
  */
 void
-DrmKernel_init()
+DrmKernel_init(void)
 {
   if (!mDatabaseConnectionInitialized)
     {
@@ -130,16 +130,16 @@ DrmKernel_init()
  *          'key', returns NULL
  */
 char *
-DrmInfo_AttributeGet(const struct NV_DrmInfo_st *drmInfo, const char *key, unsigned int *dataSizePtr)
+DrmInfo_AttributeGet(const struct NV_DrmInfo_st *pxDrmInfo, const char *pxKey, unsigned int *pxDataSize)
 {
   char *data = NULLSTR;
   unsigned int sz = 0;
 
-  struct NV_DrmInfoAttribute_st *attr = drmInfo->pattributes;
+  struct NV_DrmInfoAttribute_st *attr = pxDrmInfo->pattributes;
   while (attr)
     {
-      if (attr->name && key && 
-	  !strncmp(attr->name, key, strlen(attr->name)))
+      if (attr->name && pxKey && 
+	  !strncmp(attr->name, pxKey, strlen(attr->name)))
 	{
 	  data = attr->value;
 	  if (data)
@@ -149,8 +149,8 @@ DrmInfo_AttributeGet(const struct NV_DrmInfo_st *drmInfo, const char *key, unsig
       attr = attr->next;
     }
 
-  if (dataSizePtr)
-    *dataSizePtr = sz;
+  if (pxDataSize)
+    *pxDataSize = sz;
   
   return data;
 }
@@ -159,11 +159,11 @@ DrmInfo_AttributeGet(const struct NV_DrmInfo_st *drmInfo, const char *key, unsig
  *
  */
 void
-DrmInfo_AttributePut(const struct NV_DrmInfo_st *drmInfo, const char *key, const char *val)
+DrmInfo_AttributePut(const struct NV_DrmInfo_st *pxDrmInfo, const char *key, const char *val)
 {
   unsigned int sz = 0;
 
-  struct NV_DrmInfoAttribute_st *attr = drmInfo->pattributes;
+  struct NV_DrmInfoAttribute_st *attr = pxDrmInfo->pattributes;
   while (attr)
     {
       if (attr->name && key && 
@@ -188,11 +188,16 @@ DrmInfo_AttributePut(const struct NV_DrmInfo_st *drmInfo, const char *key, const
   NV_ASSERT("on DrmInfo:PutAttr->next(val)", attr->value);
 }
 
+/* =================================================================================== */
+/*                                    DRM Kernel implem                                */
+/* =================================================================================== */
+
 /*
- *
+ * @brief
+ *   Implem of NvDrmPlugin::onGetConstraints
  */
 struct NV_DrmConstraints_st* 
-DrmKernel_NvDrmPlugin_onGetConstraints(int uniqueId, const char *path, int action)
+DrmKernel_NvDrmPlugin_onGetConstraints(int xUniqueId, const char *pxPath, int xAction)
 {
   struct NV_DrmConstraints_st *tmp = (struct NV_DrmConstraints_st *)malloc(sizeof(struct NV_DrmConstraints_st));
   if (tmp)
@@ -205,10 +210,11 @@ DrmKernel_NvDrmPlugin_onGetConstraints(int uniqueId, const char *path, int actio
 }
 
 /*
- *
+ * @brief
+ *   Implem of NvDrmPlugin::onProcessDrmInfo
  */
 struct NV_DrmInfoStatus_st *
-DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId, const struct NV_DrmInfo_st *drmInfo)
+DrmKernel_NvDrmPlugin_onProcessDrmInfo(int xUniqueId, const struct NV_DrmInfo_st *drmInfo)
 {
   struct NV_DrmInfoStatus_st *drmInfoStatus = (struct NV_DrmInfoStatus_st *)NULL;
   if (NULL != drmInfo)
@@ -284,10 +290,11 @@ DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId, const struct NV_DrmInfo_st 
 }
 
 /*
- *
+ * @brief
+ *   Implem of NvDrmPlugin::onProcessDrmInfo
  */
 status_t
-DrmKernel_NvDrmPlugin_onSaveRights(int uniqueId, 
+DrmKernel_NvDrmPlugin_onSaveRights(int xUniqueId, 
 		       const struct NV_DrmRights_st *drmRights,
 		       const char *rightsPath,
 		       const char *contentPath)
@@ -311,10 +318,11 @@ DrmKernel_NvDrmPlugin_onSaveRights(int uniqueId,
 }
 
 /*
- *
+ * @brief
+ *   Implem of NvDrmPlugin::onAcquireDrmInfo
  */
 struct NV_DrmInfo_st *
-DrmKernel_NvDrmPlugin_onAcquireDrmInfo(int uniqueId, const struct NV_DrmInfoRequest_st *drmInfoRequest)
+DrmKernel_NvDrmPlugin_onAcquireDrmInfo(int xUniqueId, const struct NV_DrmInfoRequest_st *drmInfoRequest)
 {
   struct NV_DrmInfo_st *drmInfo = (struct NV_DrmInfo_st *)NULL;
 
@@ -368,17 +376,18 @@ DrmKernel_NvDrmPlugin_onAcquireDrmInfo(int uniqueId, const struct NV_DrmInfoRequ
 }
 
 /*
- *
+ * @brief
+ *   Implem of NvDrmPlugin::onCheckRightsStatus
  */
 int 
-DrmKernel_NvDrmPlugin_onCheckRightsStatus(int uniqueId, const char *path, int action)
+DrmKernel_NvDrmPlugin_onCheckRightsStatus(int xUniqueId, const char *pxPath, int xAction)
 {
   int rightsStatus = NV_RightsStatus_RIGHTS_INVALID;
   SecureRecord record;
 
   record._dataSize = 0;
-  if (!getRecord(&mDatabaseConnection, path, &record))
-    ALOGE("NvDrmPlugin::onCheckRightsStatus() - unable to get rights for %s", (const char* )path);
+  if (!getRecord(&mDatabaseConnection, pxPath, &record))
+    ALOGE("NvDrmPlugin::onCheckRightsStatus() - unable to get rights for %s", (const char* )pxPath);
   else
     {
       if (strncmp((const char *)record._data, "0", record._dataSize))

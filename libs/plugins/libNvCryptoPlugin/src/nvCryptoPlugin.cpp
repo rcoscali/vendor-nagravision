@@ -163,6 +163,7 @@ NvCryptoPlugin::decrypt(      bool       secure,
   if (mode != kMode_AES_CTR) {
     if (errorDetailMsg != (AString *)NULL)
       {
+        ALOGE("Invalid encryption mode - Only support AES_CTR !\n");
 	AString localAStringErrorDetailMsg("Invalid encryption mode - Only support AES_CTR !");
 	*errorDetailMsg = localAStringErrorDetailMsg;
       }

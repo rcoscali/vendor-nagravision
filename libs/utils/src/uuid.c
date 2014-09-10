@@ -30,14 +30,6 @@
  * Static definitions for UUID utils
  * ==========================================================================*/
 
-/* status */
-#define NV_KO   -1
-#define NV_OK     0
-
-/* bool */
-#define NV_FALSE (1 != 1)
-#define NV_TRUE  (1 == 1)
-
 /*
  * hex2num
  *
@@ -85,7 +77,8 @@ hexstr2bin(const char    *hex,
 
   for (i = 0; i < (int)len; i++) 
     {
-      a = hex2byte(inptr++);
+      a = hex2byte(inptr);
+      inptr +=2;
       if (a < 0) return NV_KO;
       *outptr++ = a;
     }

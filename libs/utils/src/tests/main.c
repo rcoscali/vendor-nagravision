@@ -24,6 +24,25 @@ static int n_tests_failed = 0;
 int
 main(int argc, char **argv)
 {
+  uint8_t anuuid[16];
+  uint8_t anuuid2[16];
+  
+  uuid_str2bin(NOT_NIL_UUID_STR, anuuid);
+  fprintf(stderr, "%s cmp %02x%02x%02x%02x-%02x%02x-%02x%02x-"
+          "%02x%02x-%02x%02x%02x%02x%02x%02x\n", NOT_NIL_UUID_STR,
+          anuuid[0], anuuid[1], anuuid[2], anuuid[3], 
+          anuuid[4], anuuid[5], anuuid[6], anuuid[7], 
+          anuuid[8], anuuid[9], anuuid[10], anuuid[11], 
+          anuuid[12], anuuid[13], anuuid[14], anuuid[15]);
+  uuid_str2bin(NOT_NIL_UUID_STR2, anuuid2);
+  fprintf(stderr, "%s cmp %02x%02x%02x%02x-%02x%02x-%02x%02x-"
+          "%02x%02x-%02x%02x%02x%02x%02x%02x\n", NOT_NIL_UUID_STR2,
+          anuuid2[0], anuuid2[1], anuuid2[2], anuuid2[3], 
+          anuuid2[4], anuuid2[5], anuuid2[6], anuuid2[7], 
+          anuuid2[8], anuuid2[9], anuuid2[10], anuuid2[11], 
+          anuuid2[12], anuuid2[13], anuuid2[14], anuuid2[15]);
+  
+
   /*
    * uuid_is_nil with nil UUID
    */
@@ -335,6 +354,7 @@ main(int argc, char **argv)
     
   }
 
+ skip10:
  summary:
   {
     fprintf(stderr, 

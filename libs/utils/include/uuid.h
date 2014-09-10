@@ -26,6 +26,14 @@
 extern "C" {
 #endif
 
+/* status */
+#define NV_KO   -1
+#define NV_OK     0
+
+/* bool */
+#define NV_FALSE (1 != 1)
+#define NV_TRUE  (1 == 1)
+
 int8_t uuid_str2bin(const char *str, uint8_t *bin);
 int8_t uuid_bin2str(const uint8_t *bin, char *str, size_t max_len);
 int8_t uuid_cmp(const uint8_t *uuid1, const uint8_t *uuid2);

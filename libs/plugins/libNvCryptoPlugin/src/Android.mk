@@ -42,6 +42,7 @@ LOCAL_STATIC_LIBRARIES := \
 
 LOCAL_SHARED_LIBRARIES += \
         libstagefright_foundation \
+	libcrypto \
 	liblog \
 	libutils \
         libdl
