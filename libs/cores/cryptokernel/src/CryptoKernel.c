@@ -65,9 +65,9 @@ ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure,
   ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Enter");
 
   unsigned long dataSize = 0;  
-  AES_KEY openSSLKey;
+  AES_KEY aesKey;
   
-  if (AES_set_encrypt_key(key, AES_BLOCK_SIZE * 8, &openSSLKey) < 0) 
+  if (AES_set_encrypt_key(key, AES_BLOCK_SIZE * 8, &aesKey) < 0) 
     {
       ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Unable to set decryption key\n");
       if (errorDetailMsg != NULL)
@@ -117,8 +117,9 @@ ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure,
                i < dataSize; 
                i += AES_BLOCK_SIZE) 
             AES_ctr128_encrypt(pInBuffer + i, pOutBuffer + i, 
-                               AES_BLOCK_SIZE, (const AES_KEY *)&openSSLKey, 
+                               AES_BLOCK_SIZE, (const AES_KEY *)&aesKey, 
                                (unsigned char *)iv, ecount, &num);
+          *errorDetailMsg = "";
 	}
     }
 
