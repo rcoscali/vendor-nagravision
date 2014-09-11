@@ -26,6 +26,13 @@
 #include "media/stagefright/MediaErrors.h"
 #include "CryptoKernel.h"
 
+static const char *mModeName[NV_kMode_N_MODES] = 
+  {
+    "Unencrypted",
+    "AES_CTR",
+    "AES_WV"
+  };
+
 using namespace android;
 
 /* ==========================================================================
@@ -111,9 +118,11 @@ NvCryptoPlugin::~NvCryptoPlugin()
 SYM_EXPORT bool 
 NvCryptoPlugin::requiresSecureDecoderComponent(const char *mime) const
 {
-  ALOGV("NvCryptoPlugin::requiresSecureDecoderComponent() - Enter");
+  ALOGV("NvCryptoPlugin::requiresSecureDecoderComponent() - Enter (%s)\n", mime);
 
-  return static_cast<bool>(CryptoKernel_NvCryptoPlugin_requiresSecureDecoderComponent(mime));
+  char secured = CryptoKernel_NvCryptoPlugin_requiresSecureDecoderComponent(mime);
+  ALOGI("NvCryptoPlugin::requiresSecureDecoderComponent = %s\n", secured ? "TRUE" : "FALSE");
+  return static_cast<bool>(secured);
 }
 
 /*
@@ -159,7 +168,7 @@ NvCryptoPlugin::decrypt(      bool       secure,
 {
   ALOGV("NvCryptoPlugin::decrypt() - Enter");
 
-  ALOGV("mode = %d\n", mode);
+  ALOGV("mode = %s(%d)\n", mModeName[mode], mode);
   char *localErrorDetailMsg = NULL;
 
   if (mode != kMode_AES_CTR) {
