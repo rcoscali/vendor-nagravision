@@ -59,14 +59,14 @@ NvCryptoFactory::~NvCryptoFactory()
  * Implementation of the CryptoFactory
  * ==========================================================================*/
 
-#define TEST_UUID_MATCH(x)  \
-  if (uuid_str2bin((x), nvUuid) == NV_OK)               \
-    {							\
-      if (!uuid_cmp(uuid, nvUuid)) 			\
-        {						\
-          ALOGV("*** Found a match !\n");		\
-          return true;					\
-        }						\
+#define TEST_UUID_MATCH(x)  					\
+  if (uuid_str2bin((x), nvUuid) == NV_OK)               	\
+    {								\
+      if (!uuid_cmp(uuid, nvUuid)) 				\
+        {							\
+          ALOGI("*** Found a match for UUID %s!\n", (x));       \
+          return true;						\
+        }							\
     }
 
 /*
