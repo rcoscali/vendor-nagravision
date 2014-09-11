@@ -24,6 +24,11 @@
 extern "C" {
 #endif
 
+#define NV_kMode_Unencrypted 	0
+#define NV_kMode_AES_CTR 	1
+#define NV_kMode_AES_WV 	2
+#define NV_kMode_N_MODES 	3
+
   struct NV_SubSample_st {
     size_t mNumBytesOfClearData;
     size_t mNumBytesOfEncryptedData;
