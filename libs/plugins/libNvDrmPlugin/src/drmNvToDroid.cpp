@@ -16,7 +16,7 @@
 
 #include <string.h>
 
-//#define LOG_NDEBUG 0
+#define LOG_NDEBUG 0
 #define LOG_TAG "drmNvToDroid"
 #include <utils/Log.h>
 
