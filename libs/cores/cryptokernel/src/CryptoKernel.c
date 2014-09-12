@@ -17,6 +17,7 @@
 #include <string.h>
 #include <strings.h>
 
+//#define NV_CRYPTO_DEBUG_CTR
 #define LOG_NDEBUG 0
 #define LOG_TAG "CryptoKernel"
 #include <utils/Log.h>
@@ -35,9 +36,13 @@ char
 CryptoKernel_NvCryptoPlugin_requiresSecureDecoderComponent(const char *mime)
 {
   if (!strncmp(mime, "video/", strlen("video/")))
-    return (char)1;
+    {
+      ALOGI("SecureDecoderComponent required !!\n");
+      return (char)1;
+    }
 
-  return (char)1;
+  ALOGI("SecureDecoderComponent NOT required !!\n");
+  return (char)0;
 }
 
 /*
@@ -84,6 +89,7 @@ ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure,
       dataSize = subSamples->mNumBytesOfEncryptedData 
 	+ subSamples->mNumBytesOfClearData;
 	  
+#ifdef NV_CRYPTO_DEBUG_CTR
       ALOGI("===========================================================================\n");
       ALOGI("AES_KEY: 0x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 	    key[0],  key[1],  key[2],  key[3],  key[4],  key[5],  key[6],  key[7], 
@@ -95,6 +101,7 @@ ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure,
       ALOGI("Num Bytes Of Encrypted Data: %d\n", subSamples->mNumBytesOfEncryptedData);
       ALOGI("Data Size: %lu\n", dataSize);
       ALOGI("===========================================================================\n");
+#endif /* NV_CRYPTO_DEBUG_CTR */
 
       if (dataSize == 0 || 
 	  (subSamples->mNumBytesOfEncryptedData % AES_BLOCK_SIZE) != 0 /* ||
@@ -126,6 +133,7 @@ ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure,
                   AES_ctr128_encrypt(pInBuffer + i, pOutBuffer + i, 
                                      AES_BLOCK_SIZE, (const AES_KEY *)&aesKey, 
                                      (unsigned char *)iv, ecount_buf, &num);
+#ifdef NV_CRYPTO_DEBUG_CTR
                   /* Only display 1 block per 16 */
                   if (((i-subSamples->mNumBytesOfClearData)/16) %16 == 0)
                     {
@@ -139,6 +147,7 @@ ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure,
                             ecount_buf[8],  ecount_buf[9],  ecount_buf[10], ecount_buf[11], 
                             ecount_buf[12], ecount_buf[13], ecount_buf[14], ecount_buf[15]);
                     }
+#endif /* NV_CRYPTO_DEBUG_CTR */
                 }
               
               *errorDetailMsg = "";
