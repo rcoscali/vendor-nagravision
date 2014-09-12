@@ -206,7 +206,7 @@ extern "C" {
   char DrmKernel_NvDrmPlugin_onCanHandle(int uniqueId, const char *path);
   char* DrmKernel_NvDrmPlugin_onGetOriginalMimeType(int uniqueId, const char *path, int fd);
   int DrmKernel_NvDrmPlugin_onGetDrmObjectType(int uniqueId, const char *path, const char *mimeType);
-  int DrmKernel_NvDrmPlugin_onCheckRightsStatus(int uniqueId, const char *path, int action);
+  enum NV_RightsStatus_enum DrmKernel_NvDrmPlugin_onCheckRightsStatus(int uniqueId, const char *path, int action);
   int DrmKernel_NvDrmPlugin_onConsumeRights(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, int action, char reserve);
   /*                                                        check in order to replace void */
   int DrmKernel_NvDrmPlugin_onSetPlaybackStatus(int uniqueId,  struct NV_DecryptHandle_st *decryptHandle, int playbackStatus, int64_t position);
