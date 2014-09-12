@@ -375,14 +375,21 @@ SYM_EXPORT DrmInfo*
 NvDrmPlugin::onAcquireDrmInfo(int uniqueId,
 			      const DrmInfoRequest *drmInfoRequest) 
 {
-  ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Enter : %d", uniqueId);
+  ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Enter : %d\n", uniqueId);
+
+  ALOGV("DrmInfoRequest.infoType = %d\n", drmInfoRequest->getInfoType());
+  ALOGV("DrmInfoRequest.mimeType = '%s'\n", drmInfoRequest->getMimeType().string());
+
   DrmInfo* drmInfo = NULL;
 
   struct NV_DrmInfoRequest_st *localDrmInfoRequest = DrmInfoRequest_droid2nv(drmInfoRequest);
   NV_ASSERT("on DrmInfoRequest", localDrmInfoRequest);
-  drmInfo = DrmInfo_nv2droid(DrmKernel_NvDrmPlugin_onAcquireDrmInfo(uniqueId, localDrmInfoRequest));
+  struct NV_DrmInfo_st *localDrmInfo = DrmKernel_NvDrmPlugin_onAcquireDrmInfo(uniqueId, localDrmInfoRequest);
+  ALOGV("DrmInfo got from Drmkernel: %p", localDrmInfo);
+  drmInfo = DrmInfo_nv2droid(localDrmInfo);
+  ALOGV("DrmInfo we'll return: %p", drmInfo);
 
-  ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Exit");
+  ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Exit (%p)", drmInfo);
   return drmInfo;
 }
 
