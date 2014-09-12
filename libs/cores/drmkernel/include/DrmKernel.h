@@ -46,6 +46,31 @@ extern "C" {
    */
   typedef int status_t;
 
+  /*
+   * Actions
+   */
+#define NV_DRM_ACTION_DEFAULT	0x00
+#define NV_DRM_ACTION_PLAY	0x01
+#define NV_DRM_ACTION_RINGTONE	0x02
+#define NV_DRM_ACTION_TRANSFER	0x03
+#define NV_DRM_ACTION_OUTPUT	0x04
+#define NV_DRM_ACTION_PREVIEW	0x05
+#define NV_DRM_ACTION_EXECUTE	0x06
+#define NV_DRM_ACTION_DISPLAY	0x07
+#define NV_DRM_ACTION_NUMBER	8
+
+#define NV_DRM_ACTION_NAMES \
+  {"action-DEFAULT",		\
+   "action-PLAY",		\
+   "action-RINGTONE",		\
+   "action-TRANSFER",		\
+   "action-OUTPUT",		\
+   "action-PREVIEW",		\
+   "action-EXECUTE",		\
+   "action-DISPLAY"		\
+  }
+
+
   /* struct NV_DrmMetadata_st { */
   /*   struct NV_DrmMetadata_st *next; */
   /*   char *key; */
