@@ -501,10 +501,38 @@ NvDrmPlugin::onGetDrmObjectType(      int      uniqueId,
 SYM_EXPORT int 
 NvDrmPlugin::onCheckRightsStatus(int uniqueId, const String8 &path, int action) 
 {
-  ALOGV("NvDrmPlugin::onCheckRightsStatus() - Enter : %d", uniqueId);
-  int rightsStatus = RightsStatus::RIGHTS_NOT_ACQUIRED;
+  ALOGV("NvDrmPlugin::onCheckRightsStatus() - Enter : %d\n", uniqueId);
+  ALOGV("path : %s\n", path.string());
+  ALOGV("action : %d\n", action);
 
-  ALOGV("NvDrmPlugin::onCheckRightsStatus() - Exit : %d", uniqueId);
+  enum NV_RightsStatus_enum localRightsStatus = DrmKernel_NvDrmPlugin_onCheckRightsStatus(uniqueId, path.string(), action);
+
+  int rightsStatus = -1;
+  switch (localRightsStatus)
+    {
+    case NV_RightsStatus_RIGHTS_VALID:
+      ALOGV("Rights: VALID\n");
+      rightsStatus = static_cast<int>(RightsStatus::RIGHTS_VALID);
+      break;
+
+    case NV_RightsStatus_RIGHTS_INVALID:
+      ALOGV("Rights: INVALID\n");
+      rightsStatus = static_cast<int>(RightsStatus::RIGHTS_INVALID);
+      break;
+
+    case NV_RightsStatus_RIGHTS_EXPIRED:
+      ALOGV("Rights: EXPIRED\n");
+      rightsStatus = static_cast<int>(RightsStatus::RIGHTS_EXPIRED);
+      break;
+
+    case NV_RightsStatus_RIGHTS_NOT_ACQUIRED:
+      ALOGV("Rights: NOT_ACQUIRED\n");
+      rightsStatus = static_cast<int>(RightsStatus::RIGHTS_NOT_ACQUIRED);
+      break;
+
+    }
+
+  ALOGV("NvDrmPlugin::onCheckRightsStatus() - Exit : %d (%d)", uniqueId, rightsStatus);
   return rightsStatus;
 }
 
