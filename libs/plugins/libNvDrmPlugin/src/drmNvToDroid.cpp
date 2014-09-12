@@ -35,6 +35,8 @@
 DrmConstraints *
 DrmConstraints_nv2droid(struct NV_DrmConstraints_st *in, DrmConstraints **inout)
 {
+  ALOGV("DrmConstraints_nv2droid - Entry\n");
+
   if (in == (struct NV_DrmConstraints_st *)NULL)
     {
       // Null entry -> return NULL
@@ -62,6 +64,7 @@ DrmConstraints_nv2droid(struct NV_DrmConstraints_st *in, DrmConstraints **inout)
       cur = cur->next;
     }
   
+  ALOGV("DrmConstraints_nv2droid - Exit (constraints=%p)\n", *inout);
   return *inout;    
 }
 
@@ -77,12 +80,7 @@ DrmConstraints_nv2droid(struct NV_DrmConstraints_st *in, DrmConstraints **inout)
 DrmBuffer *
 DrmBuffer_nv2droid(struct NV_DrmBuffer_st *in, DrmBuffer **inout)
 {
-  if (in == (struct NV_DrmBuffer_st *)NULL)
-    {
-      // Null entry -> return NULL
-      ALOGE("DrmBuffer_nv2droid: Invalid null input param\n");
-      return (DrmBuffer *)NULL;
-    }
+  ALOGV("DrmBuffer_nv2droid - Entry\n");
 
   if (inout != (DrmBuffer **)NULL)
     {
@@ -98,12 +96,28 @@ DrmBuffer_nv2droid(struct NV_DrmBuffer_st *in, DrmBuffer **inout)
       return NULL; 
     }
 
-  if (in->data != (char *)NULL && in->length > 0)
+  if (in == (struct NV_DrmBuffer_st *)NULL)
     {
-      (*inout)->data = (char *)malloc(in->length);
-      memcpy((*inout)->data, in->data, in->length);
+      ALOGV("Allocation of empty DrmBuffer\n");
+      (*inout)->data = (char *)malloc(1);
+      (*inout)->data[0] = 0; // Empty string
+      (*inout)->length = 0;
+    }
+  else
+    {
+      ALOGV("Allocation of DrmBuffer\n");
+      if (in->data != (char *)NULL)
+	{
+	  (*inout)->data = (char *)malloc(in->length+1);
+	  if (in->length > 0)
+	    memcpy((*inout)->data, in->data, in->length);
+	  (*inout)->data[in->length] = 0; // Is string
+	  (*inout)->length = in->length;
+	  ALOGV("Contain: '%s' (len=%d)\n", (*inout)->data, (*inout)->length);
+	}
     }
 
+  ALOGV("DrmBuffer_nv2droid - Exit (buffer=%p)\n", *inout);
   return (*inout);
 }
 
@@ -118,6 +132,8 @@ DrmBuffer_nv2droid(struct NV_DrmBuffer_st *in, DrmBuffer **inout)
 DrmInfo *
 DrmInfo_nv2droid(struct NV_DrmInfo_st *in)
 {
+  ALOGV("DrmInfoStatus_nv2droid - Entry\n");
+
   if (in == (struct NV_DrmInfo_st *)NULL)
     {
       // Null entry -> return NULL
@@ -142,19 +158,24 @@ DrmInfo_nv2droid(struct NV_DrmInfo_st *in)
       break;
     }
 
+  DrmBuffer *buffer = (DrmBuffer *)NULL;
   DrmInfo *info = new DrmInfo(info_type, 
-			      *DrmBuffer_nv2droid(in->drmBuffer, NULL), 
-			      String8(in->mimeType));
+			      *DrmBuffer_nv2droid(in->drmBuffer, &buffer), 
+			      String8(in->mimeType?in->mimeType:""));
+  ALOGV("Info to return ready\n");
   if (info != (DrmInfo *)NULL)
     {
       struct NV_DrmInfoAttribute_st *attr = in->pattributes;
+      ALOGV("attr = %p\n");
       while (attr)
 	{
+	  ALOGV("Adding attr [%s='%s']\n", attr->name, attr->value);
 	  info->put(String8(attr->name), String8(attr->value));
 	  attr = attr->next;
 	}
     }
 
+  ALOGV("DrmInfo_nv2droid - Exit (info=%p)\n", info);
   return info;
 }
 
@@ -169,6 +190,8 @@ DrmInfo_nv2droid(struct NV_DrmInfo_st *in)
 DrmInfoStatus *
 DrmInfoStatus_nv2droid(struct NV_DrmInfoStatus_st *in)
 {
+  ALOGV("DrmInfoStatus_nv2droid - Entry\n");
+
   if (in == (struct NV_DrmInfoStatus_st *)NULL)
     {
       // Null entry -> return NULL
@@ -193,11 +216,13 @@ DrmInfoStatus_nv2droid(struct NV_DrmInfoStatus_st *in)
       break;
     }
 
+  DrmBuffer *buffer = (DrmBuffer *)NULL;
   DrmInfoStatus *infoStatus = new DrmInfoStatus(in->statusCode, 
 						info_type, 
-						DrmBuffer_nv2droid(in->drmBuffer, NULL), 
+						DrmBuffer_nv2droid(in->drmBuffer, &buffer), 
 						String8(in->mimeType));
 
+  ALOGV("DrmInfoStatus_nv2droid - Exit (infoStatus=%p)\n", infoStatus);
   return infoStatus;
 }
 
