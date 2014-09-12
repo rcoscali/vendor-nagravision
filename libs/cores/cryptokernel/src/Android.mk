@@ -19,7 +19,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE:= libnvcryptokernel
 LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES:= CryptoKernel.c
-LOCAL_CFLAGS := -fvisibility=hidden
+LOCAL_CFLAGS := -std=c99 -fvisibility=hidden
 LOCAL_C_INCLUDES += \
     $(TOP)/frameworks/native/include/utils \
     $(TOP)/frameworks/av/include \
