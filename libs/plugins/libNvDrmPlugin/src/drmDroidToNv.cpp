@@ -16,7 +16,7 @@
 
 #include <string.h>
 
-//#define LOG_NDEBUG 0
+#define LOG_NDEBUG 0
 #define LOG_TAG "drmDroidToNv"
 #include <utils/Log.h>
 
@@ -25,7 +25,7 @@
 
 using namespace android;
 
-#define NV_ASSERT(msg, expr) if ((expr)) { ALOGE("drmDroidToNv ASSERT Failure: " msg); exit(1); }
+#define NV_ASSERT(msg, expr) if (!(expr)) { ALOGE("drmDroidToNv ASSERT Failure: " msg); exit(1); }
 
 /*
  *
@@ -33,6 +33,8 @@ using namespace android;
 struct NV_DrmInfo_st *
 DrmInfo_droid2nv(const DrmInfo *in)
 {
+  ALOGV("DrmInfo_droid2nv - Enter");
+
   if (in == (struct DrmInfo *)NULL)
     {
       // Null entry -> return NULL
@@ -47,22 +49,23 @@ DrmInfo_droid2nv(const DrmInfo *in)
       ALOGE("DrmInfo_droid2nv: allocation error (1)\n");
       return (struct NV_DrmInfo_st *)NULL;
     }
+  bzero(nvDrmInfo, sizeof(struct NV_DrmInfo_st));
 
   // Copy infoType & mimeType
   int info_type = 0;
   switch (in->getInfoType())
     {
-    case NV_DrmInfoRequest_TYPE_REGISTRATION_INFO:
-      info_type = DrmInfoRequest::TYPE_REGISTRATION_INFO;
+    case DrmInfoRequest::TYPE_REGISTRATION_INFO:
+      info_type = NV_DrmInfoRequest_TYPE_REGISTRATION_INFO;
       break;
-    case NV_DrmInfoRequest_TYPE_UNREGISTRATION_INFO:
-      info_type = DrmInfoRequest::TYPE_UNREGISTRATION_INFO;
+    case DrmInfoRequest::TYPE_UNREGISTRATION_INFO:
+      info_type = NV_DrmInfoRequest_TYPE_UNREGISTRATION_INFO;
       break;
-    case NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_INFO:
-      info_type = DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_INFO;
+    case DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_INFO:
+      info_type = NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_INFO;
       break;
-    case NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO:
-      info_type = DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO;
+    case DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO:
+      info_type = NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO;
       break;
     }
 
@@ -76,6 +79,8 @@ DrmInfo_droid2nv(const DrmInfo *in)
     }
 
   // Copy DrmBuffer
+  ALOGV("Copying data from DrmInfo: length = %d\n", in->getData().length);
+  ALOGV("Copying data from DrmInfo: data = %s\n", in->getData().data);
   nvDrmInfo->drmBuffer = (struct NV_DrmBuffer_st *)malloc(sizeof(struct NV_DrmBuffer_st));
   if (nvDrmInfo->drmBuffer == NULL)
     {
@@ -85,7 +90,7 @@ DrmInfo_droid2nv(const DrmInfo *in)
       return (struct NV_DrmInfo_st *)NULL;
     }
   nvDrmInfo->drmBuffer->length = in->getData().length;
-  nvDrmInfo->drmBuffer->data = (char *)malloc(nvDrmInfo->drmBuffer->length);
+  nvDrmInfo->drmBuffer->data = (char *)malloc(nvDrmInfo->drmBuffer->length+1);
   if (nvDrmInfo->drmBuffer->data == (char *)NULL)
     {
       free((void *)nvDrmInfo->drmBuffer);
@@ -95,8 +100,10 @@ DrmInfo_droid2nv(const DrmInfo *in)
       return (struct NV_DrmInfo_st *)NULL;      
     }
   memcpy((void *)nvDrmInfo->drmBuffer->data, (void *)in->getData().data, nvDrmInfo->drmBuffer->length);
+  nvDrmInfo->drmBuffer->data[nvDrmInfo->drmBuffer->length] = 0;
 
   // Copy attributes: iterate 
+  ALOGV("Copying attrs from DrmInfo: %d attrs\n", in->getCount());
   struct NV_DrmInfoAttribute_st *attrs = (struct NV_DrmInfoAttribute_st *)NULL;
   for (DrmInfo::KeyIterator it = in->keyIterator();
        it.hasNext();)
@@ -108,10 +115,12 @@ DrmInfo_droid2nv(const DrmInfo *in)
       attrs = (struct NV_DrmInfoAttribute_st *)malloc(sizeof(struct NV_DrmInfoAttribute_st));
       if (attrs == (struct NV_DrmInfoAttribute_st *)NULL)
 	goto DrmInfo_droid2nv_err;
+      bzero(attrs, sizeof(struct NV_DrmInfoAttribute_st));
 
       // Copy key & value
       key = it.next();
       val = in->get(key);
+      ALOGV("Copying attrs from DrmInfo: key=%s val='%s'\n", key.string(), val.string());
       attrs->name = strdup(key.string());
       attrs->value = strdup(val.string());
       if (attrs->name == (char *)NULL || attrs->value == (char *)NULL)
@@ -141,9 +150,13 @@ DrmInfo_droid2nv(const DrmInfo *in)
 
       // This attr copy succeded, add it at list tail
       if (nvDrmInfo->pattributes == (struct NV_DrmInfoAttribute_st *)NULL)
-	nvDrmInfo->pattributes = attrs;
+	{
+	  ALOGV("Adding first attr\n");
+	  nvDrmInfo->pattributes = attrs;
+	}
       else
 	{
+	  ALOGV("Adding attr at tail\n");
 	  struct NV_DrmInfoAttribute_st *tmp = nvDrmInfo->pattributes;
 	  while (tmp->next != (struct NV_DrmInfoAttribute_st *)NULL) tmp = tmp->next;
 	  tmp->next = attrs;
@@ -160,7 +173,7 @@ struct NV_DrmRights_st *
 DrmRights_droid2nv(const DrmRights *drmRights)
 {
   struct NV_DrmRights_st *nvDrmRights = (struct NV_DrmRights_st *)malloc(sizeof(struct NV_DrmRights_st));
-  NV_ASSERT("on nvDrmRights", nvDrmRights);
+  NV_ASSERT("on nvDrmRights (1)", nvDrmRights);
   bzero(nvDrmRights, sizeof(struct NV_DrmRights_st));
   
   nvDrmRights->data = (struct NV_DrmBuffer_st *)malloc(sizeof(struct NV_DrmBuffer_st));
@@ -203,6 +216,7 @@ struct NV_DrmInfoRequest_st *
 DrmInfoRequest_droid2nv(const DrmInfoRequest *drmInfoRequest)
 {
   struct NV_DrmInfoRequest_st *nvDrmInfoRequest = (struct NV_DrmInfoRequest_st *)malloc(sizeof(struct NV_DrmInfoRequest_st));
+  ALOGV("nvDrmInfoRequest = %p\n", nvDrmInfoRequest);
   NV_ASSERT("on DrmInfoRequest", nvDrmInfoRequest);
 
   // Copy infoType & mimeType
@@ -225,8 +239,16 @@ DrmInfoRequest_droid2nv(const DrmInfoRequest *drmInfoRequest)
 
   nvDrmInfoRequest->infoType = info_type;
 
-  nvDrmInfoRequest->mimeType = (char *)strdup(drmInfoRequest->getMimeType().string());
-  NV_ASSERT("on DrmInfoRequest", nvDrmInfoRequest->mimeType);
+  if (!drmInfoRequest->getMimeType().isEmpty())
+    {
+      nvDrmInfoRequest->mimeType = (char *)strdup(drmInfoRequest->getMimeType().string());
+      NV_ASSERT("on DrmInfoRequest:mimeType", nvDrmInfoRequest->mimeType);
+    }
+  else
+    {
+      ALOGE("Invalid empty mimeType!\n");
+      return (struct NV_DrmInfoRequest_st *)NULL;
+    }
 
   // Copy attributes: iterate 
   struct NV_DrmRequestInfoMapNode_st *mapNode = (struct NV_DrmRequestInfoMapNode_st *)NULL;
