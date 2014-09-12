@@ -404,6 +404,8 @@ DrmKernel_NvDrmPlugin_onAcquireDrmInfo(int uniqueId, const struct NV_DrmInfoRequ
 	{
 	case NV_DrmInfoRequest_TYPE_REGISTRATION_INFO:
 	  {
+            ALOGV("DrmKernel_NvDrmPlugin_onAcquireDrmInfo - TYPE_REGISTRATION_INFO\n");
+
 	    SecureRecord rec;
 	    rec._key = "PERSO";
 	    rec._data = (unsigned char *)NULL;
@@ -413,19 +415,28 @@ DrmKernel_NvDrmPlugin_onAcquireDrmInfo(int uniqueId, const struct NV_DrmInfoRequ
 	    if (getRecord(&mDatabaseConnection, "PERSO", &rec)) 
 	      {
 		DrmInfo_AttributePut(drmInfo, "PERSO", "yes");
-		DrmInfo_AttributePut(drmInfo, "UNIQUE_ID", rec._data);
+		DrmInfo_AttributePut(drmInfo, "UNIQUE_ID", (const char *)rec._data);
 		free(rec._data);
 	      }
 	  }
 	  break;
 
 	case NV_DrmInfoRequest_TYPE_UNREGISTRATION_INFO:
+          {
+            ALOGV("DrmKernel_NvDrmPlugin_onAcquireDrmInfo - TYPE_UNREGISTRATION_INFO\n");
+          }
 	  break;
 
 	case NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_INFO:
+          {
+            ALOGV("DrmKernel_NvDrmPlugin_onAcquireDrmInfo - TYPE_RIGHTS_ACQUISITION_INFO\n");
+          }
 	  break;
 
 	case NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO:
+          {
+            ALOGV("DrmKernel_NvDrmPlugin_onAcquireDrmInfo - TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO\n");
+          }
 	  break;
 
 	default:
@@ -442,26 +453,33 @@ DrmKernel_NvDrmPlugin_onAcquireDrmInfo(int uniqueId, const struct NV_DrmInfoRequ
 /*
  *
  */
-int 
+enum NV_RightsStatus_enum 
 DrmKernel_NvDrmPlugin_onCheckRightsStatus(int uniqueId, const char *path, int action)
 {
+  ALOGV("DrmKernel_NvDrmPlugin_onCheckRightsStatus - Entry\n");
+
   int rightsStatus = NV_RightsStatus_RIGHTS_INVALID;
   SecureRecord record;
   record._key = path;
-  record._data = (char *)NULL;
+  record._data = (unsigned char *)NULL;
   record._dataSize = 0;
 
   if (!getRecord(&mDatabaseConnection, path, &record))
-    ALOGE("NvDrmPlugin::onCheckRightsStatus() - unable to get rights for %s", (const char* )path);
+    {
+      ALOGE("NvDrmPlugin::onCheckRightsStatus() - unable to get rights for %s", (const char* )path);
+      rightsStatus = NV_RightsStatus_RIGHTS_NOT_ACQUIRED;
+    }
   else
     {
-      if (strncmp((const char *)record._data, "0", record._dataSize))
+      int rightsValue = atoi((const char *)record._data);
+      if (rightsValue == 0)
 	rightsStatus = NV_RightsStatus_RIGHTS_EXPIRED;
-      else
+      else if (rightsValue > 0)
 	rightsStatus = NV_RightsStatus_RIGHTS_VALID;
       free(record._data);
     }
 
+  ALOGV("DrmKernel_NvDrmPlugin_onCheckRightsStatus - Exit (%d)\n", rightsStatus);
   return rightsStatus;
 }
 
