@@ -263,6 +263,7 @@ NvDrmPlugin::onGetConstraints(int uniqueId, const String8 *path, int action)
     {
       someDrmConstraints = new DrmConstraints();
       someDrmConstraints = DrmConstraints_nv2droid(localConstraints, &someDrmConstraints);
+      DrmKernel_free_DrmConstraints(localConstraints);
     }
   
   return someDrmConstraints;
@@ -280,6 +281,7 @@ NvDrmPlugin::onProcessDrmInfo(int uniqueId, const DrmInfo *drmInfo)
   NV_ASSERT("on DrmInfo", localDrmInfo);
   struct NV_DrmInfoStatus_st *localDrmInfoStatus = DrmKernel_NvDrmPlugin_onProcessDrmInfo(uniqueId, localDrmInfo);
   DrmInfoStatus *drmInfoStatus = DrmInfoStatus_nv2droid(localDrmInfoStatus);
+  DrmKernel_free_DrmInfoStatus(localDrmInfoStatus);
 
   ALOGV("NvDrmPlugin::onProcessDrmInfo() - Exit");
   return drmInfoStatus;
@@ -293,7 +295,6 @@ NvDrmPlugin::onSetOnInfoListener(int uniqueId,
 				 const IDrmEngine::OnInfoListener *infoListener) 
 {
   ALOGV("NvDrmPlugin::onSetOnInfoListener() - Enter : %d", uniqueId);
-
   return DRM_NO_ERROR;
 }
 
@@ -360,9 +361,10 @@ NvDrmPlugin::onSaveRights(int uniqueId,
   struct NV_DrmRights_st *localDrmRights = DrmRights_droid2nv(&drmRights);
   NV_ASSERT("on DrmRights", localDrmRights);
   retVal = DrmKernel_NvDrmPlugin_onSaveRights(uniqueId, 
-				  localDrmRights, 
-				  rightsPath.string(), 
-				  contentPath.string());
+					      localDrmRights, 
+					      rightsPath.string(), 
+					      contentPath.string());
+  DrmKernel_free_DrmRights(localDrmRights);
 
   ALOGV("NvDrmPlugin::onSaveRights() - Exit");
   return retVal;
@@ -377,17 +379,15 @@ NvDrmPlugin::onAcquireDrmInfo(int uniqueId,
 {
   ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Enter : %d\n", uniqueId);
 
-  ALOGV("DrmInfoRequest.infoType = %d\n", drmInfoRequest->getInfoType());
-  ALOGV("DrmInfoRequest.mimeType = '%s'\n", drmInfoRequest->getMimeType().string());
-
   DrmInfo* drmInfo = NULL;
 
   struct NV_DrmInfoRequest_st *localDrmInfoRequest = DrmInfoRequest_droid2nv(drmInfoRequest);
   NV_ASSERT("on DrmInfoRequest", localDrmInfoRequest);
+
   struct NV_DrmInfo_st *localDrmInfo = DrmKernel_NvDrmPlugin_onAcquireDrmInfo(uniqueId, localDrmInfoRequest);
-  ALOGV("DrmInfo got from Drmkernel: %p", localDrmInfo);
+  DrmKernel_free_DrmInfoRequest(localDrmInfoRequest);
   drmInfo = DrmInfo_nv2droid(localDrmInfo);
-  ALOGV("DrmInfo we'll return: %p", drmInfo);
+  DrmKernel_free_DrmInfo(localDrmInfo);
 
   ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Exit (%p)", drmInfo);
   return drmInfo;
@@ -670,7 +670,7 @@ NvDrmPlugin::onOpenDecryptSession(int            uniqueId,
 SYM_EXPORT status_t 
 NvDrmPlugin::onOpenDecryptSession(      int            uniqueId, 
 				        DecryptHandle *decryptHandle, 
-					const char          *uri) 
+					const char    *uri) 
 {
   return DRM_ERROR_CANNOT_HANDLE;
 }

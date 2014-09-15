@@ -19,6 +19,8 @@
 
 #include "sqlite3.h"
 
+#define NV_DATABASE_PATHNAME "/data/drm/nagravision/nv.db"
+
 /**
  *@brief
  *  Define the database connection structure
@@ -30,6 +32,8 @@ typedef struct NvDatabaseConnection
   // The sqlite database connection
   sqlite3* _pDatabase;
 } NvDatabaseConnection;
+
+const char * getNvDatabasePathname(void);
 
 /**
  *@brief

@@ -24,6 +24,23 @@
 extern "C" {
 #endif
 
+#define NV_Nagra_Root_Pub_Rsakey	\
+	"-----BEGIN PUBLIC KEY-----" \
+	"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0X9rtW0P9fZhz/SDl2y4" \
+	"DrUYaVStk6ANd2P4mXp1Obm6Qtl9AqMqWL6wy4ah9UYlB5NCT8Z4tcVZIEg6YHFC" \
+	"CCQHKBoZaiv5sTKdPxEhvg6+jAwiPML5sK4X3Y5QxJ+7Y55HpaSqNpBnUldB+4SJ" \
+	"WMArJC3XMM5+gRhxUWRyAgirrdSLSdIpAkAaxxdBJT/WY15MXxMALJhE9LhPpH22" \
+	"xtYFsqy1pRNW4ciOyW5ipIqEhM1pqU+ciXYaTVFU3abqOmLkcz3ObGSR8E2q5GRD" \
+	"/5p2Kx6fR3nASCljLVE1DlHuImq+LrTM/RCebx3EPFp4PhvANSsb++gy/+l+c6Sq" \
+	"xwIDAQAB" \
+	"-----END PUBLIC KEY-----"
+
+  typedef struct NV_CryptoKernelContext_st {
+    
+  } NV_CryptoKernelContext;
+
+  typedef struct NV_CryptoKernelContext_st *NV_CryptoKernelContextPtr;
+
 #define NV_kMode_Unencrypted 	0
 #define NV_kMode_AES_CTR 	1
 #define NV_kMode_AES_WV 	2

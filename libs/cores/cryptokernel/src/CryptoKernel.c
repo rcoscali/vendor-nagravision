@@ -26,6 +26,8 @@
 
 #include "CryptoKernel.h"
 
+static const char *mNvNagraRootPubRsakey = NV_Nagra_Root_Pub_Rsakey;
+
 /*
  * Crypto Kernel entry point for NvCryptoPlugin::requiresSecureDecoderComponent
  *

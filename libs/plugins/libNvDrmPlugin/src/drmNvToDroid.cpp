@@ -166,7 +166,7 @@ DrmInfo_nv2droid(struct NV_DrmInfo_st *in)
   if (info != (DrmInfo *)NULL)
     {
       struct NV_DrmInfoAttribute_st *attr = in->pattributes;
-      ALOGV("attr = %p\n");
+      ALOGV("attr = %p\n", attr);
       while (attr)
 	{
 	  ALOGV("Adding attr [%s='%s']\n", attr->name, attr->value);
