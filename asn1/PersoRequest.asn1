@@ -1,0 +1,5 @@
+NagraPersoRequest DEFINITIONS ::=
+BEGIN
+
+NagraPersoRequest ::= SEQUENCE {
+		  

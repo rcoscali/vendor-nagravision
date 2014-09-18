@@ -1,0 +1,14 @@
+AndroidID=734fd5e7b2efdc5b
+
+Board_Model=tuna
+Board_Rev=0009
+Board_Serial=0146882a0e019006
+
+Cpu_Implem=0x41
+Cpu_Arch=7
+Cpu_Variant=0x2
+Cpu_Part=0xc09
+Cpu_Rev=10
+
+Phone_Model=Galaxy Nexus
+Phone_Manufacturer=Samsung

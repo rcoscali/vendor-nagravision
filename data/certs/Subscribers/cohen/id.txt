@@ -1,0 +1,6 @@
+Subscriber ID: 123456
+Username: cohen
+First name: Rémi
+Name: Cohen-Scali
+Address: Ave de France, 28
+	 1004 Lausanne
