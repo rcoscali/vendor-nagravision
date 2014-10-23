@@ -216,7 +216,7 @@ struct NV_DrmInfoRequest_st *
 DrmInfoRequest_droid2nv(const DrmInfoRequest *drmInfoRequest)
 {
   struct NV_DrmInfoRequest_st *nvDrmInfoRequest = (struct NV_DrmInfoRequest_st *)malloc(sizeof(struct NV_DrmInfoRequest_st));
-  bzero(nvDrmInfoRequest, sizeof(struct NV_DrmInfoRequest_st));
+  ALOGV("nvDrmInfoRequest = %p\n", nvDrmInfoRequest);
   NV_ASSERT("on DrmInfoRequest", nvDrmInfoRequest);
 
   // Copy infoType & mimeType
@@ -236,8 +236,9 @@ DrmInfoRequest_droid2nv(const DrmInfoRequest *drmInfoRequest)
       info_type = NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO;
       break;
     }
-  
+
   nvDrmInfoRequest->infoType = info_type;
+
   if (!drmInfoRequest->getMimeType().isEmpty())
     {
       nvDrmInfoRequest->mimeType = (char *)strdup(drmInfoRequest->getMimeType().string());
@@ -262,22 +263,16 @@ DrmInfoRequest_droid2nv(const DrmInfoRequest *drmInfoRequest)
       if (mapNode == (struct NV_DrmRequestInfoMapNode_st *)NULL)
 	goto DrmInfoRequest_droid2nv_err;
 
-      bzero(mapNode, sizeof(struct NV_DrmRequestInfoMapNode_st));
-      ALOGV("Map node = %p", mapNode);
-
       // Copy key & value
       key = it.next();
       val = drmInfoRequest->get(key);
-      if (!key.isEmpty())
-	mapNode->key = strdup(key.string());
-      if (!val.isEmpty())
-	mapNode->value = strdup(val.string());
-      if ((!key.isEmpty() && mapNode->key == (char *)NULL) || 
-	  (!val.isEmpty() && mapNode->value == (char *)NULL))
+      mapNode->key = strdup(key.string());
+      mapNode->value = strdup(val.string());
+      if (mapNode->key == (char *)NULL || mapNode->value == (char *)NULL)
 	{
 	  // If an error occured
-	  if (!key.isEmpty() && mapNode->key != (char *)NULL) free((void *)mapNode->key);
-	  if (!val.isEmpty() && mapNode->value != (char *)NULL) free((void *)mapNode->value);
+	  if (mapNode->key != (char *)NULL) free((void *)mapNode->key);
+	  if (mapNode->value != (char *)NULL) free((void *)mapNode->value);
 
 	DrmInfoRequest_droid2nv_err:
 	  // Free list of mapNode
@@ -291,8 +286,7 @@ DrmInfoRequest_droid2nv(const DrmInfoRequest *drmInfoRequest)
 	      nvDrmInfoRequest->requestInformationMap = tmp;
 	    }
 
-	  if (nvDrmInfoRequest->mimeType)
-	    free((void *)nvDrmInfoRequest->mimeType);
+	  free((void *)nvDrmInfoRequest->mimeType);
 	  free((void*)nvDrmInfoRequest);
 	  ALOGE("DrmInfo_droid2nv: allocation error (5)\n");
 	  return (struct NV_DrmInfoRequest_st *)NULL;      
@@ -304,8 +298,7 @@ DrmInfoRequest_droid2nv(const DrmInfoRequest *drmInfoRequest)
       else
 	{
 	  struct NV_DrmRequestInfoMapNode_st *tmp = nvDrmInfoRequest->requestInformationMap;
-	  while (tmp->next) 
-	    tmp = tmp->next;
+	  while (tmp->next != (struct NV_DrmRequestInfoMapNode_st *)NULL) tmp = tmp->next;
 	  tmp->next = mapNode;
 	}
     }

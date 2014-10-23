@@ -27,13 +27,20 @@
  */
 typedef struct SecureRecordSchema 
 {
-  const char* _tableName;	// name of the table
-  const char* _keyColumn;	// the name of the key column
-  const char* _dataColumn;	// name of the data column
-  const char* _createQuery;	// create table query
-  const char* _insertQuery;	// insert record query
-  const char* _selectQuery;	// select record query
-  const char* _deleteQuery;	//delete record query
+  // name of the table
+  const char* _tableName;
+  // the name of the key column
+  const char* _keyColumn;
+  // name of the data column
+  const char* _dataColumn;
+  // create table query
+  const char* _createQuery;
+  // insert record query
+  const char* _insertQuery;
+  // select record query
+  const char* _selectQuery;
+  //delete record query
+  const char* _deleteQuery;
 } SecureRecordSchema;
 
 static SecureRecordSchema gSecureTable =
@@ -43,8 +50,8 @@ static SecureRecordSchema gSecureTable =
   ._dataColumn = "DATA",
   ._createQuery = "CREATE TABLE IF NOT EXISTS Secure(KEY TEXT NOT NULL, DATA BLOB);",
   ._insertQuery = "INSERT INTO Secure(KEY, DATA) VALUES(?, ?)",
-  ._selectQuery = "SELECT DATA FROM Secure WHERE KEY=?",
-  ._deleteQuery = "DELETE FROM Secure WHERE KEY=?",
+  ._selectQuery = "SELECT DATA FROM Secure WHERE KEY=",
+  ._deleteQuery = "DELETE FROM Secure WHERE KEY="
 };
 
 /**

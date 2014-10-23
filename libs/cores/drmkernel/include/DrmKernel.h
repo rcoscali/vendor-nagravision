@@ -194,13 +194,7 @@ extern "C" {
 
   void DrmKernel_init(void);
 
-  void DrmKernel_free_DrmBuffer(struct NV_DrmBuffer_st *drmBuffer);
-  void DrmKernel_free_DrmRights(struct NV_DrmRights_st *drmRights);
-  void DrmKernel_free_DrmInfoStatus(struct NV_DrmInfoStatus_st *drmInfoStatus);
-  void DrmKernel_free_DrmConstraints(struct NV_DrmConstraints_st *drmConstraints);
-  void DrmKernel_free_DrmInfoRequest(struct NV_DrmInfoRequest_st *drmInfoRequest);
-  void DrmKernel_free_DrmInfo(struct NV_DrmInfo_st *drmInfo);
-
+  //  struct NV_DrmMetadata_st* DrmKernel_NvDrmPlugin_onGetMetadata(int uniqueId, const char *path);
   struct NV_DrmConstraints_st* DrmKernel_NvDrmPlugin_onGetConstraints(int uniqueId, const char *path, int action);
   struct NV_DrmInfoStatus_st* DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId, const struct NV_DrmInfo_st *drmInfo);
   int DrmKernel_NvDrmPlugin_onSetOnInfoListener(int uniqueId, NV_OnInfoListener_OnInfoPtr lsnr);
@@ -212,7 +206,7 @@ extern "C" {
   char DrmKernel_NvDrmPlugin_onCanHandle(int uniqueId, const char *path);
   char* DrmKernel_NvDrmPlugin_onGetOriginalMimeType(int uniqueId, const char *path, int fd);
   int DrmKernel_NvDrmPlugin_onGetDrmObjectType(int uniqueId, const char *path, const char *mimeType);
-  enum NV_RightsStatus_enum DrmKernel_NvDrmPlugin_onCheckRightsStatus(int uniqueId, const char *path, int action);
+  int DrmKernel_NvDrmPlugin_onCheckRightsStatus(int uniqueId, const char *path, int action);
   int DrmKernel_NvDrmPlugin_onConsumeRights(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, int action, char reserve);
   /*                                                        check in order to replace void */
   int DrmKernel_NvDrmPlugin_onSetPlaybackStatus(int uniqueId,  struct NV_DecryptHandle_st *decryptHandle, int playbackStatus, int64_t position);
