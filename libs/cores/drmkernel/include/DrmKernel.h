@@ -23,6 +23,54 @@
 extern "C" {
 #endif
 
+  /* These must stay synced with defs in */
+  /* system/core/include/utils/Error.h */ 
+#define NV_OK			    (0)  
+#define NV_NO_ERROR		    (0)  
+#define NV_DRM_ERROR_BASE	(-2000)
+
+  /* These MUST stay synced with defs in */
+  /* frameworks/av/include/drm/drm_framework_common.h */
+#define NV_DRM_ERROR_UNKNOWN				NV_DRM_ERROR_BASE
+#define NV_DRM_ERROR_NO_LICENSE				NV_DRM_ERROR_BASE - 1
+#define NV_DRM_ERROR_LICENSE_EXPIRED			NV_DRM_ERROR_BASE - 2
+#define NV_DRM_ERROR_SESSION_NOT_OPENED			NV_DRM_ERROR_BASE - 3
+#define NV_DRM_ERROR_DECRYPT_UNIT_NOT_INITIALIZED	NV_DRM_ERROR_BASE - 4
+#define NV_DRM_ERROR_DECRYPT				NV_DRM_ERROR_BASE - 5
+#define NV_DRM_ERROR_CANNOT_HANDLE			NV_DRM_ERROR_BASE - 6
+#define NV_DRM_ERROR_TAMPER_DETECTED			NV_DRM_ERROR_BASE - 7
+#define NV_DRM_ERROR_NO_PERMISSION			NV_DRM_ERROR_BASE - 8
+
+  /* 
+   * Errors
+   */
+  typedef int status_t;
+
+  /*
+   * Actions
+   */
+#define NV_DRM_ACTION_DEFAULT	0x00
+#define NV_DRM_ACTION_PLAY	0x01
+#define NV_DRM_ACTION_RINGTONE	0x02
+#define NV_DRM_ACTION_TRANSFER	0x03
+#define NV_DRM_ACTION_OUTPUT	0x04
+#define NV_DRM_ACTION_PREVIEW	0x05
+#define NV_DRM_ACTION_EXECUTE	0x06
+#define NV_DRM_ACTION_DISPLAY	0x07
+#define NV_DRM_ACTION_NUMBER	8
+
+#define NV_DRM_ACTION_NAMES \
+  {"action-DEFAULT",		\
+   "action-PLAY",		\
+   "action-RINGTONE",		\
+   "action-TRANSFER",		\
+   "action-OUTPUT",		\
+   "action-PREVIEW",		\
+   "action-EXECUTE",		\
+   "action-DISPLAY"		\
+  }
+
+
   /* struct NV_DrmMetadata_st { */
   /*   struct NV_DrmMetadata_st *next; */
   /*   char *key; */
@@ -40,18 +88,26 @@ extern "C" {
     int length;
   };
 
-  struct NV_DrmInfoAttribute {
-    struct NV_DrmInfoAttribute *next;
+  struct NV_DrmInfoAttribute_st {
+    struct NV_DrmInfoAttribute_st *next;
     char *name;
     char *value;
   };
+
+#define NV_DrmInfoRequest_TYPE_REGISTRATION_INFO 		1
+#define NV_DrmInfoRequest_TYPE_UNREGISTRATION_INFO 		2
+#define NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_INFO 		3
+#define NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO 4
 
   struct NV_DrmInfo_st {
     int infoType;
     struct NV_DrmBuffer_st *drmBuffer;
     char *mimeType;
-    struct NV_DrmInfoAttribute *attributes;
+    struct NV_DrmInfoAttribute_st *pattributes;
   };
+
+#define NV_DrmInfoStatus_STATUS_OK	1
+#define NV_DrmInfoStatus_STATUS_ERROR	2
 
   struct NV_DrmInfoStatus_st {
     int statusCode;
@@ -82,12 +138,18 @@ extern "C" {
     char *description;
   };
 
+  enum NV_RightsStatus_enum {
+    NV_RightsStatus_RIGHTS_VALID = 0x00,
+    NV_RightsStatus_RIGHTS_INVALID = 0x01,
+    NV_RightsStatus_RIGHTS_EXPIRED = 0x02,
+    NV_RightsStatus_RIGHTS_NOT_ACQUIRED = 0x03
+  };
+
   struct NV_DrmRights_st {
     struct NV_DrmBuffer_st *data;
     char *mimeType;
     char *accountId;
     char *subscriptionId;
-    char *rightsFromFile;
   };
 
   struct NV_DrmRequestInfoMapNode_st {
@@ -130,6 +192,8 @@ extern "C" {
 
   typedef void (*NV_OnInfoListener_OnInfoPtr)(struct NV_DrmInfoEvent_st *event);
 
+  void DrmKernel_init(void);
+
   //  struct NV_DrmMetadata_st* DrmKernel_NvDrmPlugin_onGetMetadata(int uniqueId, const char *path);
   struct NV_DrmConstraints_st* DrmKernel_NvDrmPlugin_onGetConstraints(int uniqueId, const char *path, int action);
   struct NV_DrmInfoStatus_st* DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId, const struct NV_DrmInfo_st *drmInfo);
@@ -137,12 +201,12 @@ extern "C" {
   int DrmKernel_NvDrmPlugin_onInitialize(int uniqueId);
   int DrmKernel_NvDrmPlugin_onTerminate(int uniqueId);
   struct NV_DrmSupportInfo_st* DrmKernel_NvDrmPlugin_onGetSupportInfo(int uniqueId);
-  int DrmKernel_NvDrmPlugin_onSaveRights(int uniqueId, struct NV_DrmRights_st *drmRights, const char *rightsPath, const char *contentPath);
-  struct NV_DrmInfo_st* DrmKernel_NvDrmPlugin_onAcquireDrmInfo(int uniqueId, struct NV_DrmInfoRequest_st *drmInfoRequest);
+  status_t DrmKernel_NvDrmPlugin_onSaveRights(int uniqueId, const struct NV_DrmRights_st *drmRights, const char *rightsPath, const char *contentPath);
+  struct NV_DrmInfo_st* DrmKernel_NvDrmPlugin_onAcquireDrmInfo(int uniqueId, const struct NV_DrmInfoRequest_st *drmInfoRequest);
   char DrmKernel_NvDrmPlugin_onCanHandle(int uniqueId, const char *path);
   char* DrmKernel_NvDrmPlugin_onGetOriginalMimeType(int uniqueId, const char *path, int fd);
   int DrmKernel_NvDrmPlugin_onGetDrmObjectType(int uniqueId, const char *path, const char *mimeType);
-  int DrmKernel_NvDrmPlugin_onCheckRightsStatus(int uniqueId, const char *path, int action);
+  enum NV_RightsStatus_enum DrmKernel_NvDrmPlugin_onCheckRightsStatus(int uniqueId, const char *path, int action);
   int DrmKernel_NvDrmPlugin_onConsumeRights(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, int action, char reserve);
   /*                                                        check in order to replace void */
   int DrmKernel_NvDrmPlugin_onSetPlaybackStatus(int uniqueId,  struct NV_DecryptHandle_st *decryptHandle, int playbackStatus, int64_t position);

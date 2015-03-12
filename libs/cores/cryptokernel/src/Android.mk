@@ -19,7 +19,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE:= libnvcryptokernel
 LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES:= CryptoKernel.c
-LOCAL_CFLAGS := -fvisibility=hidden
+LOCAL_CFLAGS := -std=c99 -fvisibility=hidden
 LOCAL_C_INCLUDES += \
     $(TOP)/frameworks/native/include/utils \
     $(TOP)/frameworks/av/include \
@@ -27,6 +27,7 @@ LOCAL_C_INCLUDES += \
     $(TOP)/external/libxml2/include \
     $(TOP)/external/icu4c/common \
     $(TOP)/external/stlport/stlport \
+    $(TOP)/external/openssl/include \
     $(TOP)/bionic \
     $(TOP)/bionic/libstdc++/include \
     $(LOCAL_PATH)/../include
@@ -38,7 +39,9 @@ LOCAL_SHARED_LIBRARIES := \
     libicuuc \
     liblog \
     libcutils \
+    libcrypto \
     libstlport \
     libstdc++ \
     libdl
+
 include $(BUILD_STATIC_LIBRARY)

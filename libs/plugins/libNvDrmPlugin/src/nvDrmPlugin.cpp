@@ -37,7 +37,22 @@
 
 #include "nvDrmPlugin.h"
 #include "parseMpdHelpers.h"
+#include "drmNvToDroid.h"
+#include "drmDroidToNv.h"
 #include "DrmKernel.h"
+
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "nvDatabaseSecureTable.h"
+#include "sqlite3.h"
+
+#define NV_ASSERT(msg, expr) if (!(expr)) { ALOGE("nvDrmPlugin: FATAL alloc error <" msg ">"); exit(255); }
+
+#ifdef __cplusplus
+}
+#endif
 
 using namespace android;
 
@@ -55,13 +70,13 @@ const char* const NvDrmPlugin::sNvMetadata[N_METADATA*2] = {
 
 String8 NvDrmPlugin::cencUuid = String8("urn:mpeg:dash:mp4protection:2011");
 
-#define ADDMAP(x)	\
-static map<const char *, String8> x; \
-String8 \
-NvDrmPlugin::x##Find(const char *key) \
-{ \
-  return x.find(key)->second; \
-}
+#define ADDMAP(x)				\
+  static map<const char *, String8> x;		\
+  String8					\
+  NvDrmPlugin::x##Find(const char *key)		\
+  {						\
+    return x.find(key)->second;			\
+  }
 ADDMAP(drmSchemes);
 ADDMAP(mimeTypes);
 ADDMAP(fileExts);
@@ -69,7 +84,10 @@ ADDMAP(fileExts);
 /*
  * init ref maps
  */
-extern "C" void
+#ifdef __cplusplus
+extern "C" 
+#endif
+void 
 initRefDataMaps()
 {
 #define MAPINSERT(x, y, z) x.insert(pair<const char *, String8>(y,String8(z)))
@@ -112,19 +130,44 @@ initRefDataMaps()
  *
  * This extern "C" is mandatory to be managed by TPlugInManager
  */
-extern "C" 
-SYM_EXPORT IDrmEngine* 
+#ifdef __cplusplus
+extern "C"
+#endif
+SYM_EXPORT IDrmEngine*
 create() 
 {
   ALOGV("IDrmEngine* create() - Enter");
 
   if (!mapInitialized)
     initRefDataMaps();
-      
-  if ((NvDrmPlugin *)NULL == sNvDrmPluginInstance)
+
+  if ((NvDrmPlugin *) NULL == sNvDrmPluginInstance)
     sNvDrmPluginInstance = new NvDrmPlugin();
 
   ALOGV("IDrmEngine* create() - Exit : instance=0x%p", sNvDrmPluginInstance);
+  return (IDrmEngine*) sNvDrmPluginInstance;
+}
+
+/*
+ * create
+ *
+ * This extern "C" is mandatory to be managed by TPlugInManager
+ */
+#ifdef __cplusplus
+extern "C"
+#endif
+SYM_EXPORT IDrmEngine*
+createDrmFactory() 
+{
+  ALOGV("IDrmEngine* createDrmfactory() - Enter");
+
+  if (!mapInitialized)
+    initRefDataMaps();
+
+  if ((NvDrmPlugin *) NULL == sNvDrmPluginInstance)
+    sNvDrmPluginInstance = new NvDrmPlugin();
+
+  ALOGV("IDrmEngine* create() - Exit : instance=0x%p", (void *)sNvDrmPluginInstance);
   return (IDrmEngine*)sNvDrmPluginInstance;
 }
 
@@ -133,23 +176,23 @@ create()
  *
  * This extern "C" is mandatory to be managed by TPlugInManager
  */
-extern "C" 
+#ifdef __cplusplus
+extern "C"
+#endif
 SYM_EXPORT void 
 destroy(IDrmEngine* pPlugIn) 
 {
-  ALOGV("void destroy(IDrmEngine* pPlugIn) - Enter : 0x%p", pPlugIn);  
+  ALOGV("void destroy(IDrmEngine* pPlugIn) - Enter : 0x%p", pPlugIn);
 
-  if (pPlugIn == (IDrmEngine *)sNvDrmPluginInstance)
-    {
-      delete sNvDrmPluginInstance;
-      sNvDrmPluginInstance = (NvDrmPlugin *)NULL;
-    }
-  else
+  if (pPlugIn == (IDrmEngine *) sNvDrmPluginInstance) {
+    delete sNvDrmPluginInstance;
+    sNvDrmPluginInstance = (NvDrmPlugin *) NULL;
+  } else
     delete pPlugIn;
 
-  pPlugIn = (IDrmEngine *)NULL;
+  pPlugIn = (IDrmEngine *) NULL;
 
-  ALOGV("void destroy(IDrmEngine* pPlugIn) - Exit");  
+  ALOGV("void destroy(IDrmEngine* pPlugIn) - Exit");
 }
 
 
@@ -160,31 +203,32 @@ destroy(IDrmEngine* pPlugIn)
 /*
  * Public Constructor
  */
-NvDrmPlugin::NvDrmPlugin()
-  : DrmEngineBase()
+NvDrmPlugin::NvDrmPlugin() :
+  DrmEngineBase() 
 {
   ALOGV("NvDrmPlugin::NvDrmPlugin() - Enter");
   mNvDrmMetadata = new DrmMetadata();
-  
-  for (int n = 0; 
-       n < N_METADATA/2; 
-       n++)
-    {
-      String8 *key = new String8(NvDrmPlugin::sNvMetadata[2*n]);
-      String8 *value = new String8(NvDrmPlugin::sNvMetadata[2*n+1]);
-      mNvDrmMetadata->put(key, (char const *)value);
 
-      ALOGV("NvDrmPlugin::NvDrmPlugin(): added metadata key='%s' value='%s'", key->string(), value->string());
+  DrmKernel_init();
 
-      delete key;
-      delete value;
-    }
+  for (int n = 0; n < N_METADATA / 2; n++) {
+    String8 *key = new String8(NvDrmPlugin::sNvMetadata[2 * n]);
+    String8 *value = new String8(NvDrmPlugin::sNvMetadata[2 * n + 1]);
+    mNvDrmMetadata->put(key, (char const *) value);
+
+    ALOGV("NvDrmPlugin::NvDrmPlugin(): added metadata key='%s' value='%s'",
+	  key->string(), value->string());
+
+    delete key;
+    delete value;
+  }
 }
 
 /* 
  * Virtual Public Destructor
  */
-NvDrmPlugin::~NvDrmPlugin() {
+NvDrmPlugin::~NvDrmPlugin() 
+{
   ALOGV("NvDrmPlugin::~NvDrmPlugin() - Enter");
 }
 
@@ -195,9 +239,8 @@ NvDrmPlugin::~NvDrmPlugin() {
 /*
  * NvDrmPlugin::onGetMetadata
  */
-SYM_EXPORT DrmMetadata* 
-NvDrmPlugin::onGetMetadata(      int      uniqueId, 
-			   const String8 *path) 
+SYM_EXPORT DrmMetadata*
+NvDrmPlugin::onGetMetadata(int uniqueId, const String8 *path) 
 {
   ALOGV("NvDrmPlugin::onGetMetadata() - Enter : %d", uniqueId);
   return ((NULL != path) ? mNvDrmMetadata : (DrmMetadata*)NULL);
@@ -206,10 +249,8 @@ NvDrmPlugin::onGetMetadata(      int      uniqueId,
 /*
  * NvDrmPlugin::onGetConstraints
  */
-SYM_EXPORT DrmConstraints* 
-NvDrmPlugin::onGetConstraints(      int      uniqueId, 
-			      const String8 *path, 
-			            int      action)
+SYM_EXPORT DrmConstraints*
+NvDrmPlugin::onGetConstraints(int uniqueId, const String8 *path, int action) 
 {
   ALOGV("NvDrmPlugin::onGetConstraints() - Enter : %d", uniqueId);
   
@@ -221,18 +262,7 @@ NvDrmPlugin::onGetConstraints(      int      uniqueId,
   if (localConstraints != (struct NV_DrmConstraints_st *)NULL)
     {
       someDrmConstraints = new DrmConstraints();
-      struct NV_DrmConstraints_st *cur = localConstraints;
-
-      while (cur)
-	{
-	  someDrmConstraints->put((const String8 *)new String8(localConstraints->key), 
-				  localConstraints->value);
-	  cur = cur->next;
-	  if (localConstraints->key) free(localConstraints->key);
-	  if (localConstraints->value) free(localConstraints->value);
-	  free(localConstraints);
-	  localConstraints = cur;
-	}
+      someDrmConstraints = DrmConstraints_nv2droid(localConstraints, &someDrmConstraints);
     }
   
   return someDrmConstraints;
@@ -241,54 +271,15 @@ NvDrmPlugin::onGetConstraints(      int      uniqueId,
 /*
  * NvDrmPlugin::onProcessDrmInfo
  */
-SYM_EXPORT DrmInfoStatus* 
-NvDrmPlugin::onProcessDrmInfo(      int      uniqueId, 
-			      const DrmInfo *drmInfo)
+SYM_EXPORT DrmInfoStatus*
+NvDrmPlugin::onProcessDrmInfo(int uniqueId, const DrmInfo *drmInfo) 
 {
   ALOGV("NvDrmPlugin::onProcessDrmInfo() - Enter : %d", uniqueId);
 
-  DrmInfoStatus* drmInfoStatus = NULL;
-  if (NULL != drmInfo)
-    {
-      switch (drmInfo->getInfoType())
-	{
-	case DrmInfoRequest::TYPE_REGISTRATION_INFO: 
-	  {
-	    const DrmBuffer* emptyBuffer = new DrmBuffer();
-	    drmInfoStatus = new DrmInfoStatus(DrmInfoStatus::STATUS_OK,
-					      DrmInfoRequest::TYPE_REGISTRATION_INFO, 
-					      emptyBuffer, 
-					      drmInfo->getMimeType());
-	  }
-	  break;
-
-	case DrmInfoRequest::TYPE_UNREGISTRATION_INFO:
-	  {
-	    const DrmBuffer* emptyBuffer = new DrmBuffer();
-	    drmInfoStatus = new DrmInfoStatus(DrmInfoStatus::STATUS_OK,
-					      DrmInfoRequest::TYPE_UNREGISTRATION_INFO, 
-					      emptyBuffer, 
-					      drmInfo->getMimeType());
-	  }
-	  break;
-	
-	case DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_INFO:
-	  {
-	    String8 licenseString("dummy_license_string");
-	    const int bufferSize = licenseString.size();
-	    char* data = NULL;
-	    data = new char[bufferSize];
-	    memcpy(data, licenseString.string(), bufferSize);
-	    const DrmBuffer* buffer = new DrmBuffer(data, bufferSize);
-	    drmInfoStatus = new DrmInfoStatus(DrmInfoStatus::STATUS_OK,
-					      DrmInfoRequest::TYPE_RIGHTS_ACQUISITION_INFO, 
-					      buffer, 
-					      drmInfo->getMimeType());
-	  }
-	  break;
-	  
-	}
-    }
+  struct NV_DrmInfo_st *localDrmInfo = DrmInfo_droid2nv(drmInfo);
+  NV_ASSERT("on DrmInfo", localDrmInfo);
+  struct NV_DrmInfoStatus_st *localDrmInfoStatus = DrmKernel_NvDrmPlugin_onProcessDrmInfo(uniqueId, localDrmInfo);
+  DrmInfoStatus *drmInfoStatus = DrmInfoStatus_nv2droid(localDrmInfoStatus);
 
   ALOGV("NvDrmPlugin::onProcessDrmInfo() - Exit");
   return drmInfoStatus;
@@ -298,8 +289,8 @@ NvDrmPlugin::onProcessDrmInfo(      int      uniqueId,
  * NvDrmPlugin::onSetOnInfoListener
  */
 SYM_EXPORT status_t 
-NvDrmPlugin::onSetOnInfoListener(      int                         uniqueId, 
-				 const IDrmEngine::OnInfoListener *infoListener)
+NvDrmPlugin::onSetOnInfoListener(int uniqueId,
+				 const IDrmEngine::OnInfoListener *infoListener) 
 {
   ALOGV("NvDrmPlugin::onSetOnInfoListener() - Enter : %d", uniqueId);
 
@@ -359,38 +350,46 @@ NvDrmPlugin::onGetSupportInfo(int uniqueId)
  * NvDrmPlugin::onSaveRights
  */
 SYM_EXPORT status_t 
-NvDrmPlugin::onSaveRights(      int        uniqueId, 
-			  const DrmRights &drmRights,
-			  const String8   &rightsPath, 
-			  const String8   &contentPath)
+NvDrmPlugin::onSaveRights(int uniqueId,
+			  const DrmRights &drmRights, const String8 &rightsPath,
+			  const String8 &contentPath) 
 {
   ALOGV("NvDrmPlugin::onSaveRights() - Enter : %d", uniqueId);
-  return DRM_NO_ERROR;
+  status_t retVal = DRM_ERROR_UNKNOWN;
+
+  struct NV_DrmRights_st *localDrmRights = DrmRights_droid2nv(&drmRights);
+  NV_ASSERT("on DrmRights", localDrmRights);
+  retVal = DrmKernel_NvDrmPlugin_onSaveRights(uniqueId, 
+				  localDrmRights, 
+				  rightsPath.string(), 
+				  contentPath.string());
+
+  ALOGV("NvDrmPlugin::onSaveRights() - Exit");
+  return retVal;
 }
 
 /*
  * NvDrmPlugin::onAcquireDrmInfo
  */
-SYM_EXPORT DrmInfo* 
-NvDrmPlugin::onAcquireDrmInfo(      int             uniqueId, 
-			      const DrmInfoRequest *drmInfoRequest)
+SYM_EXPORT DrmInfo*
+NvDrmPlugin::onAcquireDrmInfo(int uniqueId,
+			      const DrmInfoRequest *drmInfoRequest) 
 {
-  ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Enter : %d", uniqueId);
+  ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Enter : %d\n", uniqueId);
+
+  ALOGV("DrmInfoRequest.infoType = %d\n", drmInfoRequest->getInfoType());
+  ALOGV("DrmInfoRequest.mimeType = '%s'\n", drmInfoRequest->getMimeType().string());
+
   DrmInfo* drmInfo = NULL;
 
-  if (NULL != drmInfoRequest)
-    {
-      String8 dataString("dummy_acquistion_string");
-      int length = dataString.length();
-      char* data = NULL;
-      data = new char[length];
-      memcpy(data, dataString.string(), length);
-      drmInfo = new DrmInfo(drmInfoRequest->getInfoType(),
-			    DrmBuffer(data, length), 
-			    drmInfoRequest->getMimeType());
-    }
+  struct NV_DrmInfoRequest_st *localDrmInfoRequest = DrmInfoRequest_droid2nv(drmInfoRequest);
+  NV_ASSERT("on DrmInfoRequest", localDrmInfoRequest);
+  struct NV_DrmInfo_st *localDrmInfo = DrmKernel_NvDrmPlugin_onAcquireDrmInfo(uniqueId, localDrmInfoRequest);
+  ALOGV("DrmInfo got from Drmkernel: %p", localDrmInfo);
+  drmInfo = DrmInfo_nv2droid(localDrmInfo);
+  ALOGV("DrmInfo we'll return: %p", drmInfo);
 
-  ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Exit");
+  ALOGV("NvDrmPlugin::onAcquireDrmInfo() - Exit (%p)", drmInfo);
   return drmInfo;
 }
 
@@ -414,11 +413,12 @@ NvDrmPlugin::parseMpd(const String8 &path)
   pDocument = xmlParseFile(path.string());
   if (pDocument == NULL)
     return false;
-  ALOGV("MPD: pDocument = %p\n", pDocument);
+  
+  //ALOGV("MPD: pDocument = %p\n", pDocument);
   pRootNode = xmlDocGetRootElement(pDocument);
-  ALOGV("MPD: pRootNode = %p\n", pRootNode);
+  //ALOGV("MPD: pRootNode = %p\n", pRootNode);
   if (pRootNode == NULL)
-      return false;
+    return false;
 
   /*  print_element_names(pRootNode);*/
   cipherSchemeOk = findCencElement(pRootNode);
@@ -437,18 +437,18 @@ NvDrmPlugin::parseMpd(const String8 &path)
  * NvDrmPlugin::onCanHandle
  */
 SYM_EXPORT bool 
-NvDrmPlugin::onCanHandle(      int      uniqueId, 
-			 const String8 &path) 
+NvDrmPlugin::onCanHandle(int uniqueId, const String8 &path) 
 {
   ALOGV("NvDrmPlugin::canHandle() - Enter : %d path='%s'", uniqueId, path.string());
 
   String8 extension = path.getPathExtension();
   extension.toLower();
-
-  if (String8(".mpd") == extension) {
-    ALOGV("NvDrmPlugin::canHandle() - parsing MPD");
-    return parseMpd(path);
-  }
+  
+  if (String8(".mpd") == extension) 
+    {
+      ALOGV("NvDrmPlugin::canHandle() - parsing MPD");
+      return parseMpd(path);
+    }
 
   for (map<const char *, String8>::iterator it = fileExts.begin();
        it != fileExts.end();
@@ -470,9 +470,8 @@ NvDrmPlugin::onCanHandle(      int      uniqueId,
  * NvDrmPlugin::onGetOriginalMimeType
  */
 SYM_EXPORT String8 
-NvDrmPlugin::onGetOriginalMimeType(      int      uniqueId, 
-				   const String8 &path, 
-				         int      fd) 
+NvDrmPlugin::onGetOriginalMimeType(int uniqueId,
+				   const String8 &path, int fd) 
 {
   ALOGV("NvDrmPlugin::onGetOriginalMimeType() - Enter : %d path='%s'", uniqueId, path.string());
   String8 str("");
@@ -489,8 +488,8 @@ NvDrmPlugin::onGetOriginalMimeType(      int      uniqueId,
  */
 SYM_EXPORT int 
 NvDrmPlugin::onGetDrmObjectType(      int      uniqueId, 
-				const String8 &path, 
-				const String8 &mimeType) 
+				      const String8 &path, 
+				      const String8 &mimeType) 
 {
   ALOGV("NvDrmPlugin::onGetDrmObjectType() - Enter : %d", uniqueId);
   return DrmObjectType::UNKNOWN;
@@ -500,14 +499,14 @@ NvDrmPlugin::onGetDrmObjectType(      int      uniqueId,
  * NvDrmPlugin::onCheckRightsStatus
  */
 SYM_EXPORT int 
-NvDrmPlugin::onCheckRightsStatus(      int      uniqueId, 
-				 const String8 &path, 
-				       int      action) 
+NvDrmPlugin::onCheckRightsStatus(int uniqueId, const String8 &path, int action) 
 {
-
   ALOGV("NvDrmPlugin::onCheckRightsStatus() - Enter : %d", uniqueId);
 
-  int rightsStatus = RightsStatus::RIGHTS_VALID;
+  int rightsStatus = DrmKernel_NvDrmPlugin_onCheckRightsStatus(uniqueId, path.string(),
+  		 action);
+
+  ALOGV("NvDrmPlugin::onCheckRightsStatus() - Exit : %d", uniqueId);
   return rightsStatus;
 }
 
@@ -542,9 +541,9 @@ NvDrmPlugin::onSetPlaybackStatus(int            uniqueId,
  */
 SYM_EXPORT bool 
 NvDrmPlugin::onValidateAction(      int                uniqueId, 
-			      const String8           &path,
+				    const String8           &path,
 			            int                action, 
-			      const ActionDescription &description) 
+				    const ActionDescription &description) 
 {
   ALOGV("NvDrmPlugin::onValidateAction() - Enter : %d", uniqueId);
   return true;
@@ -555,7 +554,7 @@ NvDrmPlugin::onValidateAction(      int                uniqueId,
  */
 SYM_EXPORT status_t 
 NvDrmPlugin::onRemoveRights(      int      uniqueId, 
-			    const String8 &path) 
+				  const String8 &path) 
 {
   ALOGV("NvDrmPlugin::onRemoveRights() - Enter : %d", uniqueId);
   return DRM_NO_ERROR;
@@ -588,19 +587,20 @@ NvDrmPlugin::onOpenConvertSession(int uniqueId,
 SYM_EXPORT DrmConvertedStatus* 
 NvDrmPlugin::onConvertData(      int        uniqueId, 
 			         int        convertId, 
-			   const DrmBuffer *inputData)
+				 const DrmBuffer *inputData)
 {
   ALOGV("NvDrmPlugin::onConvertData() - Enter : %d", uniqueId);
   DrmBuffer* convertedData = NULL;
 
   if (NULL != inputData && 0 < inputData->length)
     {
-    int length = inputData->length;
-    char* data = NULL;
-    data = new char[length];
-    convertedData = new DrmBuffer(data, length);
-    memcpy(convertedData->data, inputData->data, length);
-  }
+      int length = inputData->length;
+      char* data = NULL;
+      data = new char[length];
+      convertedData = new DrmBuffer(data, length);
+      memcpy(convertedData->data, inputData->data, length);
+    }
+
   return new DrmConvertedStatus(DrmConvertedStatus::STATUS_OK, convertedData, 0 /*offset*/);
 }
 
@@ -644,7 +644,7 @@ NvDrmPlugin::onOpenDecryptSession(int            uniqueId,
 SYM_EXPORT status_t 
 NvDrmPlugin::onOpenDecryptSession(      int            uniqueId, 
 				        DecryptHandle *decryptHandle, 
-				  const char          *uri) 
+					const char    *uri) 
 {
   return DRM_ERROR_CANNOT_HANDLE;
 }
@@ -680,7 +680,7 @@ SYM_EXPORT status_t
 NvDrmPlugin::onInitializeDecryptUnit(      int            uniqueId, 
 				           DecryptHandle *decryptHandle,
 				           int            decryptUnitId, 
-				     const DrmBuffer     *headerInfo) 
+					   const DrmBuffer     *headerInfo) 
 {
   ALOGV("NvDrmPlugin::onInitializeDecryptUnit() - Enter : %d", uniqueId);
   return DRM_NO_ERROR;
@@ -693,7 +693,7 @@ SYM_EXPORT status_t
 NvDrmPlugin::onDecrypt(      int             uniqueId, 
 		             DecryptHandle  *decryptHandle,
 		             int             decryptUnitId, 
-		       const DrmBuffer      *encBuffer, 
+			     const DrmBuffer      *encBuffer, 
 		             DrmBuffer     **decBuffer, 
 		             DrmBuffer      *IV) 
 {

@@ -15,6 +15,13 @@
  */
 
 #include <string.h>
+#include <strings.h>
+
+#define LOG_NDEBUG 0
+#define LOG_TAG "CryptoKernel"
+#include <utils/Log.h>
+
+#include <openssl/aes.h>
 
 #include "CryptoKernel.h"
 
@@ -24,12 +31,13 @@
  * @param mime	mime type of the content
  * @return 1 (true) if secure decoder required, 0 (false) otherwise
  */
-char CryptoKernel_NvCryptoPlugin_requiresSecureDecoderComponent(const char *mime)
+char
+CryptoKernel_NvCryptoPlugin_requiresSecureDecoderComponent(const char *mime)
 {
-  if (strncmp(mime, "application/vnd.nagra.drm", strlen("application/vnd.nagra.drm")))
-    return (char)0;
+  if (!strncmp(mime, "video/", strlen("video/")))
+    return (char)1;
 
-  return (char)1;
+  return (char)0;
 }
 
 /*
@@ -55,6 +63,89 @@ ssize_t CryptoKernel_NvCryptoPlugin_decrypt(char secure,
 					    void *dstPtr, 
 					    char **errorDetailMsg)
 {
-  *errorDetailMsg = strdup("Not yet implemented !!");
-  return 0;
+  ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Enter");
+
+  unsigned long dataSize = 0;  
+  AES_KEY aesKey;
+  
+  if (AES_set_encrypt_key(key, AES_BLOCK_SIZE * 8, &aesKey) < 0) 
+    {
+      ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Unable to set decryption key\n");
+      if (errorDetailMsg != NULL)
+        *errorDetailMsg = "Invalid key";
+    }
+  
+  else
+    {
+      unsigned int num = 0;
+      unsigned char ecount_buf[AES_BLOCK_SIZE];
+      bzero(ecount_buf, AES_BLOCK_SIZE);
+
+      dataSize = subSamples->mNumBytesOfEncryptedData 
+	+ subSamples->mNumBytesOfClearData;
+	  
+      ALOGI("===========================================================================\n");
+      ALOGI("AES_KEY: 0x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+	    key[0],  key[1],  key[2],  key[3],  key[4],  key[5],  key[6],  key[7], 
+	    key[8],  key[9],  key[10], key[11], key[12], key[13], key[14], key[15]);
+      ALOGI("IV: 0x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+	    iv[0],  iv[1],  iv[2],  iv[3],  iv[4],  iv[5],  iv[6],  iv[7], 
+	    iv[8],  iv[9],  iv[10], iv[11], iv[12], iv[13], iv[14], iv[15]);
+      ALOGI("Num Bytes Of Clear Data: %d\n", subSamples->mNumBytesOfClearData);
+      ALOGI("Num Bytes Of Encrypted Data: %d\n", subSamples->mNumBytesOfEncryptedData);
+      ALOGI("Data Size: %lu\n", dataSize);
+      ALOGI("===========================================================================\n");
+
+      if (dataSize == 0 || 
+	  (subSamples->mNumBytesOfEncryptedData % AES_BLOCK_SIZE) != 0 /* ||
+           subSamples->mNumBytesOfEncryptedData == 0*/)
+        {
+          ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Wrong buffer data size >%lu - %d<"
+                " (empty or not multiple of 16 bytes)\n", 
+                dataSize, subSamples->mNumBytesOfEncryptedData);
+          if (errorDetailMsg != NULL)
+            *errorDetailMsg = "Invalid size";
+          dataSize = 0;
+        }
+	  
+      else
+	{
+	  unsigned char* pInBuffer = (unsigned char*) srcPtr;
+	  unsigned char* pOutBuffer = (unsigned char*) dstPtr;
+	  
+	  if (subSamples->mNumBytesOfClearData > 0) 
+	    memcpy(pOutBuffer, pInBuffer, subSamples->mNumBytesOfClearData);
+
+          if (subSamples->mNumBytesOfEncryptedData > 0)
+            {
+              uint32_t i = 0;
+              for (i = subSamples->mNumBytesOfClearData;
+                   i < dataSize; 
+                   i += AES_BLOCK_SIZE) 
+                {
+                  AES_ctr128_encrypt(pInBuffer + i, pOutBuffer + i, 
+                                     AES_BLOCK_SIZE, (const AES_KEY *)&aesKey, 
+                                     (unsigned char *)iv, ecount_buf, &num);
+                  /* Only display 1 block per 16 */
+                  if (((i-subSamples->mNumBytesOfClearData)/16) %16 == 0)
+                    {
+                      ALOGV("IV[%d]: 0x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", 
+                            (i-subSamples->mNumBytesOfClearData)/16,
+                            iv[0],  iv[1],  iv[2],  iv[3],  iv[4],  iv[5],  iv[6],  iv[7], 
+                            iv[8],  iv[9],  iv[10], iv[11], iv[12], iv[13], iv[14], iv[15]);
+                      ALOGV("ecount_buf: 0x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+                            ecount_buf[0],  ecount_buf[1],  ecount_buf[2],  ecount_buf[3],  
+                            ecount_buf[4],  ecount_buf[5],  ecount_buf[6],  ecount_buf[7], 
+                            ecount_buf[8],  ecount_buf[9],  ecount_buf[10], ecount_buf[11], 
+                            ecount_buf[12], ecount_buf[13], ecount_buf[14], ecount_buf[15]);
+                    }
+                }
+              
+              *errorDetailMsg = "";
+            }
+        }
+    }
+
+  ALOGV("CryptoKernel_NvCryptoPlugin_decrypt - Exit");
+  return dataSize;
 }

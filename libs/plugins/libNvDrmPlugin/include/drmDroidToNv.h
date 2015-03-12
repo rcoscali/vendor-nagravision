@@ -14,33 +14,33 @@
  * limitations under the License.
  */
 
-#ifndef __UUID_H_
-#define __UUID_H_
+#ifndef DRM_DROID_TO_NV_H__
+#define DRM_DROID_TO_NV_H__
 
-#define UUID_LEN     16
-#define UUID_STR_LEN 37
+#include <drm/DrmRights.h>
+#include <drm/DrmConstraints.h>
+#include <drm/DrmMetadata.h>
+#include <drm/DrmInfo.h>
+#include <drm/DrmInfoEvent.h>
+#include <drm/DrmInfoStatus.h>
+#include <drm/DrmConvertedStatus.h>
+#include <drm/DrmInfoRequest.h>
+#include <drm/DrmSupportInfo.h>
 
-#include <stdio.h>
+#include "DrmKernel.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C" 
+{
+  using namespace android;
 #endif
 
-/* status */
-#define NV_KO   -1
-#define NV_OK     0
-
-/* bool */
-#define NV_FALSE (1 != 1)
-#define NV_TRUE  (1 == 1)
-
-int8_t uuid_str2bin(const char *str, uint8_t *bin);
-int8_t uuid_bin2str(const uint8_t *bin, char *str, size_t max_len);
-int8_t uuid_cmp(const uint8_t *uuid1, const uint8_t *uuid2);
-int8_t uuid_is_nil(const uint8_t *uuid);
+  struct NV_DrmInfo_st *DrmInfo_droid2nv(const DrmInfo *);
+  struct NV_DrmRights_st *DrmRights_droid2nv(const DrmRights *);
+  struct NV_DrmInfoRequest_st *DrmInfoRequest_droid2nv(const DrmInfoRequest *);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __UUID_H_ */
+#endif /* DRM_DROID_TO_NV_H__ */

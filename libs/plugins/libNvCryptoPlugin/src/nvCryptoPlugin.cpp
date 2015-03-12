@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include <media/stagefright/foundation/AString.h>
-
 #define LOG_NDEBUG 0
 #define LOG_TAG "nvCryptoPlugin"
 #include <utils/Log.h>
 
-#include "String8.h"
-#include "drm/DrmAPI.h"
+#include <media/stagefright/foundation/AString.h>
+#include <utils/String8.h>
+#include <drm/DrmAPI.h>
+#include <media/stagefright/MediaErrors.h>
+
 #include "nvCryptoPlugin.h"
-#include "media/stagefright/MediaErrors.h"
 #include "CryptoKernel.h"
 
 using namespace android;
@@ -159,29 +159,60 @@ NvCryptoPlugin::decrypt(      bool       secure,
 {
   ALOGV("NvCryptoPlugin::decrypt() - Enter");
 
-  char *localErrorDetailMsg = NULL;
-  if (mode != kMode_AES_CTR) {
-    if (errorDetailMsg != (AString *)NULL)
-      {
-	AString localAStringErrorDetailMsg("Invalid encryption mode - Only support AES_CTR !");
-	*errorDetailMsg = localAStringErrorDetailMsg;
-      }
-    return 0;
-  }
-  struct NV_SubSample_st localSubSamples;
-  localSubSamples.mNumBytesOfClearData     = subSamples->mNumBytesOfClearData;
-  localSubSamples.mNumBytesOfEncryptedData = subSamples->mNumBytesOfEncryptedData;
-  ssize_t ret = CryptoKernel_NvCryptoPlugin_decrypt(static_cast<char>(secure),
-						    key, iv,
-						    srcPtr,
-						    &localSubSamples, numSubSamples,
-						    dstPtr,
-						    &localErrorDetailMsg);
-  if (errorDetailMsg != (AString *)NULL)
+  ssize_t ret = 0;
+  errorDetailMsg = NULL;
+    
+  if (subSamples == 0) 
+    ALOGV("NvCryptoPlugin::decrypt() - no subsample pointer");
+  
+  else
     {
-      AString localAStringErrorDetailMsg(localErrorDetailMsg);
-      *errorDetailMsg = localAStringErrorDetailMsg;
+      struct NV_SubSample_st localSubSamples;
+      localSubSamples.mNumBytesOfClearData = subSamples->mNumBytesOfClearData;
+      localSubSamples.mNumBytesOfEncryptedData = subSamples->mNumBytesOfEncryptedData;
+      
+      ALOGV("NvCryptoPlugin::decrypt() - secure %d: numSubSamples %d: mNumBytesOfClearData %d: " "mNumBytesOfEncryptedData %d: ",
+	    secure,
+	    numSubSamples,
+	    localSubSamples.mNumBytesOfClearData,
+	    localSubSamples.mNumBytesOfEncryptedData);
+      
+      char *localErrorDetailMsg = NULL;
+      if (mode == kMode_Unencrypted) 
+	{
+	  ALOGV("NvCryptoPlugin::decrypt() - Unencrypted data !");
+	  ret = localSubSamples.mNumBytesOfClearData;
+	  memcpy(dstPtr, srcPtr, ret);
+	}
+      
+      else if (mode != kMode_AES_CTR) 
+	{
+	  ALOGV("NvCryptoPlugin::decrypt() -Invalid encryption mode - Only support AES_CTR !");
+	  if (errorDetailMsg != (AString *) NULL) 
+	    {
+	      AString localAStringErrorDetailMsg("Invalid encryption mode - Only support AES_CTR !");
+	      *errorDetailMsg = localAStringErrorDetailMsg;
+	    }
+	}
+      
+      else
+	{
+	  
+	  ALOGV("NvCryptoPlugin::decrypt() dst size %d",
+		localSubSamples.mNumBytesOfClearData +
+		localSubSamples.mNumBytesOfEncryptedData);
+	  
+	  ret = CryptoKernel_NvCryptoPlugin_decrypt(static_cast<char>(secure),
+						    key, iv, srcPtr, &localSubSamples, numSubSamples, dstPtr,
+						    &localErrorDetailMsg);
+	  if (errorDetailMsg != (AString *) NULL) 
+	    {
+	      AString localAStringErrorDetailMsg(localErrorDetailMsg);
+	      *errorDetailMsg = localAStringErrorDetailMsg;
+	    }
+	}
     }
-
+  
+  ALOGV("NvCryptoPlugin::decrypt() - Exit");
   return ret;
 }

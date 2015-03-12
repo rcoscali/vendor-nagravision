@@ -30,14 +30,6 @@
  * Static definitions for UUID utils
  * ==========================================================================*/
 
-/* status */
-#define NV_KO   -1
-#define NV_OK     0
-
-/* bool */
-#define NV_FALSE (1 != 1)
-#define NV_TRUE  (1 == 1)
-
 /*
  * hex2num
  *
@@ -85,7 +77,8 @@ hexstr2bin(const char    *hex,
 
   for (i = 0; i < (int)len; i++) 
     {
-      a = hex2byte(inptr++);
+      a = hex2byte(inptr);
+      inptr +=2;
       if (a < 0) return NV_KO;
       *outptr++ = a;
     }
@@ -171,12 +164,12 @@ uuid_bin2str(const uint8_t *bin,
   int len = -1;
   len = snprintf(str, 
 		 max_len, 
-		 "%02x%02x%02x%02x-"                  /*  4 digits  9 chars */
-		 "%02x%02x-"                          /*  2 digits  5 chars */
-		 "%02x%02x-"                          /*  2 digits  5 chars */
-		 "%02x%02x-"                          /*  2 digits  5 chars */
-		 "%02x%02x%02x%02x%02x%02x",          /*  6 digits 12 chars */
-		                                         /* 16 digits total */
+		 "%02x%02x%02x%02x-"                  /*  4 digits  9 chars:  8 hex digits + dash */
+		 "%02x%02x-"                          /*  2 digits  5 chars:  4 hex digits + dash */
+		 "%02x%02x-"                          /*  2 digits  5 chars:  4 hex digits + dash */
+		 "%02x%02x-"                          /*  2 digits  5 chars:  4 hex digits + dash */
+		 "%02x%02x%02x%02x%02x%02x",          /*  6 digits 12 chars: 12 hex digits        */
+		                                      /* 16 digits total */
 		 bin[0], bin[1], bin[2], bin[3],
 		 bin[4], bin[5], 
 		 bin[6], bin[7],

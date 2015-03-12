@@ -16,9 +16,18 @@
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
+LOCAL_SRC_FILES:= \
+	DrmKernel.c 		\
+	nvDatabase.c 		\
+	nvDatabaseSecureTable.c
+LOCAL_C_INCLUDES += \
+	$(TOP)/external/sqlite/dist \
+	$(LOCAL_PATH)/../include
 LOCAL_MODULE:= libnvdrmkernel
 LOCAL_MODULE_TAGS := optional
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../include
-LOCAL_SRC_FILES:= DrmKernel.c
 LOCAL_CFLAGS := -fvisibility=hidden
+LOCAL_SHARED_LIBRARIES := \
+    libsqlite \
+    liblog
+
 include $(BUILD_STATIC_LIBRARY)

@@ -27,6 +27,7 @@ LOCAL_C_INCLUDES:= 			 \
 	$(TOP)/frameworks/av/include 	 \
 	$(TOP)/frameworks/native/include 	 \
 	$(TOP)/frameworks/native/include/media \
+	$(TOP)/system/core/include \
 	$(LOCAL_PATH)/../../../utils/include \
 	$(LOCAL_PATH)/../../../cores/cryptokernel/include \
 	$(LOCAL_PATH)/../include
@@ -41,6 +42,7 @@ LOCAL_STATIC_LIBRARIES := \
 
 LOCAL_SHARED_LIBRARIES += \
         libstagefright_foundation \
+	libcrypto \
 	liblog \
 	libutils \
         libdl
