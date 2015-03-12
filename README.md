@@ -10,7 +10,7 @@ This code was developped as a demonstration Use Case for the ASPIRE Project.
 
 [Link to aspire Project Web Site](https://aspire-fp7.eu/)
 
-This code is intended to be built in an Android Source tree (JB or KK) and shall be located in vendor/nagravision directory (with a link from build/target/product/full_base.mk makefile near libfwdlockengine -- by adding libnvcryptoplugin & libnvdrmplugin). If you don't know what I mean, don't try it. 
+This code is intended to be built in an Android Source tree (JB or KK) and shall be located in vendor/nagravision directory (with a link from build/target/product/full_base.mk makefile near libfwdlockengine -- by adding [libnvcryptoplugin](https://github.com/rcoscali/vendor-nagravision/blob/master/libs/plugins/libNvCryptoPlugin/src/Android.mk#L19) & libnvdrmplugin). If you don't know what I mean, don't try it. 
 This file for KK: `https://android.googlesource.com/platform/build/+/kitkat-mr1-release/target/product/full_base.mk`
 This way for ex:
 
