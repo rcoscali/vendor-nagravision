@@ -34,6 +34,6 @@ This way for ex:
 
 Branches for which plugins were tested against are: kitkat-mr1-release jb-mr2.0-release
 Branches for which plugins should run are: all JB and KK.
-On later branches, media framework changed a lot... I didn't event try.
+On later branches, media framework changed a lot... I didn't event tried.
 
 There is a build kit that avoid having a whole android source tree... I'll add it later
