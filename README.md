@@ -24,8 +24,8 @@ This way for ex:
   
   PRODUCT_PACKAGES := \
       libfwdlockengine \
-+     libnvdrmplugin.so \
-+     libnvcryptoplugin.so \
++     libnvdrmplugin \
++     libnvcryptoplugin \
       OpenWnn \
       PinyinIME \
       libWnnEngDic \
