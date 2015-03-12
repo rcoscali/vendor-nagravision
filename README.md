@@ -14,6 +14,7 @@ This code is intended to be built in an Android Source tree (JB or KK) and shall
 This file for KK: https://android.googlesource.com/platform/build/+/kitkat-mr1-release/target/product/full_base.mk
 This way for ex:
 
+```
 ========================================================================================
 *** build/target/product/full_base.mk.orig	2015-01-20 08:57:29.481673521 +0100
 --- build/target/product/full_base.mk	2014-10-10 09:45:01.734319095 +0200
@@ -29,6 +30,7 @@ This way for ex:
       PinyinIME \
       libWnnEngDic \
 ========================================================================================
+```
 
 Branches for which plugins were tested against are: kitkat-mr1-release jb-mr2.0-release
 Branches for which plugins should run are: all JB and KK.
