@@ -10,5 +10,7 @@ This code was developped as a demonstration Use Case for the ASPIRE European Pro
 
 https://aspire-fp7.eu/
 
-This code is intended to be built in an Android Source tree (JB or KK) and shall be located in vendor/nagravision directory (with a link from build/core/target/product/full_base.mk makefile near libfwdlockengine -- by adding libnvcryptoplugin & libnvdrmplugin). If you don't know what I mean, don't try it. 
+This code is intended to be built in an Android Source tree (JB or KK) and shall be located in vendor/nagravision directory (with a link from build/target/product/full_base.mk makefile near libfwdlockengine -- by adding libnvcryptoplugin & libnvdrmplugin). If you don't know what I mean, don't try it. 
+This file for KK: https://android.googlesource.com/platform/build/+/kitkat-mr2.1-release/target/product/full_base.mk
+
 There is a build kit that avoid having a whole android source tree... I'll add it later
