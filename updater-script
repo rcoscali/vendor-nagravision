@@ -1,0 +1,137 @@
+#
+# updater-script
+#
+# Edify script for upgrading/installing Nagravision DRM plugins
+# in Android 4.3.x / 4.4.x
+# 
+# Copyrights © Nagravision 2014
+#
+
+# Partitions from fstab.recovery for Nitrogen6x on Android 4.3/4.4
+# /dev/block/platform/sdhci-esdhc-imx.2/by-num/p1 /boot
+# /dev/block/platform/sdhci-esdhc-imx.2/by-num/p2 /recover
+# /dev/block/platform/sdhci-esdhc-imx.2/by-num/p4 /data
+# /dev/block/platform/sdhci-esdhc-imx.2/by-num/p5 /system
+# /dev/block/platform/sdhci-esdhc-imx.2/by-num/p6 /cache
+# /dev/block/platform/sdhci-esdhc-imx.2/by-num/p7 /device
+# /dev/block/platform/sdhci-esdhc-imx.2/by-num/p8 /vendor
+
+set_progress(0.00);
+
+ui_print("[***********************************************]");
+ui_print("[*                AspireDemoPlayer &           *]");
+ui_print("[*     Nagra DRMPlugins for Android 4.3/4.4    *]");
+ui_print("[***********************************************]");
+
+## Don't need anymore to update root FS after moving DB
+#ui_print("[=> Updating RootFS in BOOT partition...");
+#run_program("/sbin/busybox", "mount", "/boot"); 
+#package_extract_file("uramdisk.img", "/boot/uramdisk.img");
+#ui_print("[<] done.");
+
+set_progress(0.03);
+ui_print("[=> Mounting /system...");
+mount("ext4", "EMMC", "/dev/block/platform/sdhci-esdhc-imx.2/mmcblk1p5", "/system");
+#run_program("/sbin/busybox", "mount", "/system");
+ui_print("[<] done.");
+
+set_progress(0.09);
+ui_print("[=> Uninstall App (just in case)...");
+delete("/system/app/AspireDemoPlayer.apk");
+ui_print("[<] done.");
+
+set_progress(0.12);
+ui_print("[=> Installing App & DRM plugins...");
+package_extract_dir("system", "/system");
+ui_print("[<] done.");
+
+set_progress(0.21);
+ui_print("[=> Unmounting /system...");
+unmount("/system");
+ui_print("[<] done.");
+
+set_progress(0.24);
+ui_print("[=> Mounting /data...");
+mount("ext4", "EMMC", "/dev/block/platform/sdhci-esdhc-imx.2/mmcblk1p4", "/data");
+#run_program("/sbin/busybox", "mount", "/data");
+ui_print("[<] done.");
+
+#set_progress(0.27);
+#ui_print("[=> Installing Video to /data...");
+#package_extract_dir("data", "/data");
+#ui_print("[<] done.");
+
+set_progress(0.27);
+ui_print("[=> Installing video files in /data...");
+
+set_progress(0.31375);
+ui_print("   [>> ... avatar_cenc.mp4");
+package_extract_file("/data/drm/contents/avatar_cenc.mp4",             "/data/drm/contents/avatar_cenc.mp4");
+
+set_progress(0.35375);
+ui_print("   [>> ... avatar.mp4");
+package_extract_file("/data/drm/contents/avatar.mp4",                  "/data/drm/contents/avatar.mp4");
+
+set_progress(0.40125);
+ui_print("   [>> ... beethoven.mp3");
+package_extract_file("/data/drm/contents/beethoven.mp3",               "/data/drm/contents/beethoven.mp3");
+
+set_progress(0.445);
+ui_print("   [>> ... famous.3gp");
+package_extract_file("/data/drm/contents/famous.3gp",                  "/data/drm/contents/famous.3gp");
+
+set_progress(0.48875);
+ui_print("   [>> ... oblivion_cenc.mp4");
+package_extract_file("/data/drm/contents/oblivion_cenc.mp4",           "/data/drm/contents/oblivion_cenc.mp4");
+
+set_progress(0.5325);
+ui_print("   [>> ... oblivion.mp4");
+package_extract_file("/data/drm/contents/oblivion.mp4",                "/data/drm/contents/oblivion.mp4");
+
+set_progress(0.57625);
+ui_print("   [>> ... seg_b1000k_v.mp4");
+package_extract_file("/data/drm/contents/seg_b1000k_v.mp4",            "/data/drm/contents/seg_b1000k_v.mp4");
+
+set_progress(0.62);
+ui_print("   [>> ... sherlockholmes_cenc.mp4");
+package_extract_file("/data/drm/contents/sherlockholmes_cenc.mp4",     "/data/drm/contents/sherlockholmes_cenc.mp4");
+
+set_progress(0.66375);
+ui_print("   [>> ... sherlockholmes.mp4");
+package_extract_file("/data/drm/contents/sherlockholmes.mp4",          "/data/drm/contents/sherlockholmes.mp4");
+
+set_progress(0.7075);
+ui_print("   [>> ... thedarkknightrises_cenc.mp4");
+package_extract_file("/data/drm/contents/thedarkknightrises_cenc.mp4", "/data/drm/contents/thedarkknightrises_cenc.mp4");
+
+set_progress(0.75125);
+ui_print("   [>> ... thedarkknightrises.mp4");
+package_extract_file("/data/drm/contents/thedarkknightrises.mp4",      "/data/drm/contents/thedarkknightrises.mp4");
+
+set_progress(0.795);
+ui_print("   [>> ... thegrey_cenc.mp4");
+package_extract_file("/data/drm/contents/thegrey_cenc.mp4",            "/data/drm/contents/thegrey_cenc.mp4");
+
+set_progress(0.83875);
+ui_print("   [>> ... thegrey.mp4");
+package_extract_file("/data/drm/contents/thegrey.mp4",                 "/data/drm/contents/thegrey.mp4");
+
+set_progress(0.8825);
+ui_print("   [>> ... thor.mp4");
+package_extract_file("/data/drm/contents/thor.mp4",                    "/data/drm/contents/thor.mp4");
+
+set_progress(0.92625);
+ui_print("   [>> ... video.mp4");
+package_extract_file("/data/drm/contents/video.mp4",                   "/data/drm/contents/video.mp4");
+
+set_progress(0.97);
+ui_print("   [>> ... wintersbone.mp4");
+package_extract_file("/data/drm/contents/wintersbone.mp4",             "/data/drm/contents/wintersbone.mp4");
+
+set_progress(1.0);
+ui_print("[=> Process complete..  Reboot at will.");
+ui_print(" ");
+ui_print(" ");
+ui_print("[*--------------------------------------*]");
+ui_print(" |  © NagraVision 2014                  | ");
+ui_print("[*--------------------------------------*]");

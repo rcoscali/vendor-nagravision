@@ -644,7 +644,7 @@ NvDrmPlugin::onOpenDecryptSession(int            uniqueId,
 SYM_EXPORT status_t 
 NvDrmPlugin::onOpenDecryptSession(      int            uniqueId, 
 				        DecryptHandle *decryptHandle, 
-					const char    *uri) 
+					const char          *uri) 
 {
   return DRM_ERROR_CANNOT_HANDLE;
 }

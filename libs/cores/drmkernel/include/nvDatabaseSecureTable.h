@@ -45,13 +45,13 @@ typedef struct SecureRecordSchema
 
 static SecureRecordSchema gSecureTable =
 {
-  ._tableName = "Secure",
-  ._keyColumn = "KEY",
-  ._dataColumn = "DATA",
-  ._createQuery = "CREATE TABLE IF NOT EXISTS Secure(KEY TEXT NOT NULL, DATA BLOB);",
-  ._insertQuery = "INSERT INTO Secure(KEY, DATA) VALUES(?, ?)",
-  ._selectQuery = "SELECT DATA FROM Secure WHERE KEY=",
-  ._deleteQuery = "DELETE FROM Secure WHERE KEY="
+  "Secure",
+  "KEY",
+  "DATA",
+  "CREATE TABLE IF NOT EXISTS Secure(KEY TEXT NOT NULL, DATA BLOB);",
+  "INSERT INTO Secure(KEY, DATA) VALUES(?, ?)",
+  "SELECT DATA FROM Secure WHERE KEY=",
+  "DELETE FROM Secure WHERE KEY="
 };
 
 /**
@@ -67,6 +67,11 @@ typedef struct SecureRecord
   unsigned char* _data;
   // The size in bytes of the data in the record
   unsigned int _dataSize;
+  // The corresponding tag associated with the key
+  // memory should be freed by the caller
+  unsigned char* _tag;
+  // The size in bytes of the authen tag in the record
+  unsigned int _tagSize;
 } SecureRecord;
 
 
