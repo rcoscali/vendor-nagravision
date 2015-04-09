@@ -16,6 +16,9 @@
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
+
+WITHOUT_LIBCOMPILER_RT = yes
+
 LOCAL_MODULE:= libnvdrmplugin
 LOCAL_MODULE_OWNER := nagravision
 LOCAL_MODULE_TAGS := optional
@@ -23,7 +26,6 @@ LOCAL_CFLAGS := -fvisibility=hidden
 LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib/drm
 
 LOCAL_SRC_FILES:= 		\
-	parseMpdHelpers.cpp 	\
 	nvDrmPlugin.cpp		\
 	drmNvToDroid.cpp	\
 	drmDroidToNv.cpp
@@ -42,20 +44,21 @@ LOCAL_C_INCLUDES +=                                                     \
 	$(LOCAL_PATH)/../../../cores/drmkernel/include
 
 LOCAL_SHARED_LIBRARIES := \
+	libdrmframeworkcommon \
 	libdrmframework   \
 	libutils          \
 	libbinder         \
 	libsqlite	  \
 	libicuuc          \
+	libcrypto	  \
 	liblog            \
 	libcutils         \
 	libstlport        \
 	libstdc++         \
 	libdl
 
-LOCAL_STATIC_LIBRARIES :=     \
-	libnvdrmkernel        \
-	libdrmframeworkcommon \
-	libxml2
+#LOCAL_ADDITIONAL_DEPENDENCIES := libnvdrmkernel
+
+LOCAL_STATIC_LIBRARIES := libnvdrmkernel
 
 include $(BUILD_SHARED_LIBRARY)

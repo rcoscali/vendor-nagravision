@@ -14,6 +14,60 @@
  * limitations under the License.
  */
 
+/* 
+   For generating a protected content right key, 
+   key being: [0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf]
+
+       cohen@PC12316-LX:~$ echo -ne "\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf" | \
+       > openssl enc -e -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | \
+       > od -A n -w32 -t x1
+        91 a9 ba a6 ba 28 e5 15 7f 60 23 c7 79 53 21 16 c2 97 36 e0 6f 3b 73 65 d0 81 2a 86 0e 4b f7 10
+       cohen@PC12316-LX:~$
+
+   key being: [0x7f, 0x99, 0x06, 0x95, 0x78, 0xab, 0x4d, 0xae, 0x8d, 0x6c, 0xe2, 0x4c, 0xc3, 0x21, 0x02, 0x32]
+
+       cohen@PC12316-LX:~$ echo -ne "\x7f\x99\x06\x95\x78\xab\x4d\xae\x8d\x6c\xe2\x4c\xc3\x21\x02\x32" | \
+       > openssl enc -e -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | \
+       > od -A n -w32 -t x1
+        62 20 97 23 6d 4b ad e2 12 38 a7 70 d2 17 e3 c5 7c cf 27 cc 41 36 90 06 f0 12 8c dd 29 96 e3 96
+       cohen@PC12316-LX:~$
+
+for generating a content right tag:
+   # echo -ne "contentId + keyId + <length> + <protectedKey>" | openssl sha256 -binary | openssl enc -nopad -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | od -A n -w32 -t x1
+   ex.:
+
+   Key and IV are the one defined in DrmKernel.c provided to openssl as hex bytes string
+
+   For the right 1 test vector (note the \x00 at end of content id, it is a C string: need it at right decoding)
+     "A Title for a content 1" : \x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x31\x00
+     keyId:                      \x12\x1a\x0f\xca\x0f\x1b\x47\x5b\x89\x10\x29\x7f\xa8\xe0\xa0\x7e
+     Length                      \x00\x20
+     Protected Key #1            \x91\xa9\xba\xa6\xba\x28\xe5\x15\x7f\x60\x23\xc7\x79\x53\x21\x16\xc2\x97\x36\xe0\x6f\x3b\x73\x65\xd0\x81\x2a\x86\x0e\x4b\xf7\x10
+
+       cohen@PC12316-LX:~$ echo -ne "\x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x31\x00\x12\
+       > \x1a\x0f\xca\x0f\x1b\x47\x5b\x89\x10\x29\x7f\xa8\xe0\xa0\x7e\x00\x20\x91\
+       > \xa9\xba\xa6\xba\x28\xe5\x15\x7f\x60\x23\xc7\x79\x53\x21\x16\xc2\x97\x36\xe0\x6f\x3b\x73\x65\xd0\x81\x2a\x86\x0e\x4b\xf7\x10" | \
+       > openssl sha256 -binary | openssl enc -e -nopad -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | \
+       > od -A n -w32 -t x1
+        74 35 40 1a 16 21 28 38 2d 3a ba 8d 11 b2 76 56 65 e6 14 de 79 e9 4e 86 a5 18 d1 47 f3 76 a4 b8
+       cohen@PC12316-LX:~$ 
+
+   For the right 2 test vector (note the \x00 at end of content id, it is a C string: need it at right decoding)
+     "A Title for a content 2" : \x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x32\x00
+     keyId:                      \x80\x9a\x82\xba\xec\x0e\x42\x54\xbf\x43\x57\x3e\xed\x9e\xac\x02
+     Length                      \x00\x20
+     Protected Key #2            \x62\x20\x97\x23\x6d\x4b\xad\xe2\x12\x38\xa7\x70\xd2\x17\xe3\xc5\x7c\xcf\x27\xcc\x41\x36\x90\x06\xf0\x12\x8c\xdd\x29\x96\xe3\x96
+
+       cohen@PC12316-LX:~$ echo -ne "\x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x32\00\x80\
+       > \x9a\x82\xba\xec\x0e\x42\x54\xbf\x43\x57\x3e\xed\x9e\xac\x02\x00\x20\
+       > \x62\x20\x97\x23\x6d\x4b\xad\xe2\x12\x38\xa7\x70\xd2\x17\xe3\xc5\x7c\xcf\x27\xcc\x41\x36\x90\x06\xf0\x12\x8c\xdd\x29\x96\xe3\x96" | \
+       > openssl sha256 -binary | openssl enc -e -nopad -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | \
+       > od -A n -w32 -t x1
+        50 42 e0 e5 ce 61 1e b7 a7 c6 66 a8 94 fd 02 85 81 f4 aa 6b b4 2b 94 57 7e 37 48 58 19 9b 2e b8
+       cohen@PC12316-LX:~$ 
+
+ */
+
 #include <unistd.h>
 #include <sys/types.h>
 
@@ -33,7 +87,9 @@ typedef __off64_t off64_t;
  * Stubbed for avoiding too much libraries for test
  * More they can't be linked for host exe
  */
-int __android_log_print(int prio, const char *tag,  const char *fmt, ...)
+int __android_log_print(__attribute__((unused)) int prio, 
+			__attribute__((unused)) const char *tag, 
+			const char *fmt, ...)
 {
   if (getenv("DEBUG"))
     {
@@ -41,28 +97,34 @@ int __android_log_print(int prio, const char *tag,  const char *fmt, ...)
       
       va_start(ap, fmt);
       vfprintf(stderr, fmt, ap);
+      fprintf(stderr, "\n");
       va_end(ap);
     }
 
   return 0;
 }
 
-int openNvDatabase(NvDatabaseConnection* pxDatabaseConnection)
+/* Stubs for db */
+int openNvDatabase(__attribute__((unused)) NvDatabaseConnection* pxDatabaseConnection)
 {
   return SQLITE_OK;
 }
 
-int insertSecureRecord(sqlite3* pxDatabase, SecureRecord xRecord)
+int insertSecureRecord(__attribute__((unused)) sqlite3* pxDatabase, 
+		       __attribute__((unused)) SecureRecord *pxRecord)
 {
   return SQLITE_OK;
 }
 
-int closeNvDatabase(NvDatabaseConnection* pxDatabaseConnection)
+int closeNvDatabase(__attribute__((unused)) NvDatabaseConnection* pxDatabaseConnection)
 {
   return SQLITE_OK;
 }
 
-int selectSecureRecord(sqlite3* pxDatabase, const char* xKey, SecureRecord* pxRecord)
+int selectSecureRecord(__attribute__((unused)) sqlite3* pxDatabase, 
+		       __attribute__((unused)) const char* xKey, 
+		       __attribute__((unused)) const uint8_t* xKeyId, 
+		       __attribute__((unused)) SecureRecord* pxRecord)
 {
   return SQLITE_OK;
 }
@@ -72,24 +134,41 @@ int selectSecureRecord(sqlite3* pxDatabase, const char* xKey, SecureRecord* pxRe
  * These are test vectors
  * tag1 (resp. 2) is the aes mac for record1 (resp. 2) 
  */
-const char *record1 = "abcdefghijklmnopqrstuvwxyz012345";
+
+
+
+const uint8_t kid1[AES_BLOCK_SIZE] = {
+  /* KeyId     0x00 */  0x12, 0x1a, 0x0f, 0xca, 0x0f, 0x1b, 0x47, 0x5b, 
+  /*           0x08 */  0x89, 0x10, 0x29, 0x7f, 0xa8, 0xe0, 0xa0, 0x7e
+};
+const uint8_t kc1[AES_BLOCK_SIZE*2] = {
+  /* Key       0x00 */  0x91, 0xa9, 0xba, 0xa6, 0xba, 0x28, 0xe5, 0x15, 
+  /*           0x08 */  0x7f, 0x60, 0x23, 0xc7, 0x79, 0x53, 0x21, 0x16, 
+  /*           0x10 */  0xc2, 0x97, 0x36, 0xe0, 0x6f, 0x3b, 0x73, 0x65, 
+  /*           0x18 */  0xd0, 0x81, 0x2a, 0x86, 0x0e, 0x4b, 0xf7, 0x10
+};
 const uint8_t tag1[SHA256_DIGEST_LENGTH] = {
-  /*
-    0000000 e6 1f c4 a8 4e 02 59 71 47 20 d9 98 b7 a0 40 da
-    0000020 4a 42 f5 7a 8a 06 f2 d1 5b d1 6d 9d 4d 96 ef 5a
-  */
-  0xe6, 0x1f, 0xc4, 0xa8, 0x4e, 0x02, 0x59, 0x71, 0x47, 0x20, 0xd9, 0x98, 0xb7, 0xa0, 0x40, 0xda, 
-  0x4a, 0x42, 0xf5, 0x7a, 0x8a, 0x06, 0xf2, 0xd1, 0x5b, 0xd1, 0x6d, 0x9d, 0x4d, 0x96, 0xef, 0x5a
+  /* SHA256    0x00 */  0x74, 0x35, 0x40, 0x1a, 0x16, 0x21, 0x28, 0x38, 
+  /*           0x08 */  0x2d, 0x3a, 0xba, 0x8d, 0x11, 0xb2, 0x76, 0x56, 
+  /*           0x10 */  0x65, 0xe6, 0x14, 0xde, 0x79, 0xe9, 0x4e, 0x86, 
+  /*           0x18 */  0xa5, 0x18, 0xd1, 0x47, 0xf3, 0x76, 0xa4, 0xb8
 };
 
-const char *record2 = "6abcdefghijklmnopqrstuvwxyz01234";
+const uint8_t kid2[AES_BLOCK_SIZE] = {
+  /* KeyId     0x00 */  0x80, 0x9a, 0x82, 0xba, 0xec, 0x0e, 0x42, 0x54, 
+  /*           0x08 */  0xbf, 0x43, 0x57, 0x3e, 0xed, 0x9e, 0xac, 0x02
+};
+const uint8_t kc2[AES_BLOCK_SIZE*2] = {
+  /* Key       0x00 */  0x62, 0x20, 0x97, 0x23, 0x6d, 0x4b, 0xad, 0xe2, 
+  /*           0x08 */  0x12, 0x38, 0xa7, 0x70, 0xd2, 0x17, 0xe3, 0xc5, 
+  /*           0x10 */  0x7c, 0xcf, 0x27, 0xcc, 0x41, 0x36, 0x90, 0x06, 
+  /*           0x18 */  0xf0, 0x12, 0x8c, 0xdd, 0x29, 0x96, 0xe3, 0x96
+};
 const uint8_t tag2[SHA256_DIGEST_LENGTH] = {
-  /*
-    0000000 10 f6 c9 4c f0 cc 47 79 30 fa 83 a8 13 aa 6b 7e
-    0000020 96 9c d6 15 8f b6 4d 43 29 6e e7 ce 5e fa 48 d2
-  */
-  0x10, 0xf6, 0xc9, 0x4c, 0xf0, 0xcc, 0x47, 0x79, 0x30, 0xfa, 0x83, 0xa8, 0x13, 0xaa, 0x6b, 0x7e,
-  0x96, 0x9c, 0xd6, 0x15, 0x8f, 0xb6, 0x4d, 0x43, 0x29, 0x6e, 0xe7, 0xce, 0x5e, 0xfa, 0x48, 0xd2
+  /* SHA256    0x00 */ 0x50, 0x42, 0xe0, 0xe5, 0xce, 0x61, 0x1e, 0xb7, 
+  /*           0x08 */ 0xa7, 0xc6, 0x66, 0xa8, 0x94, 0xfd, 0x02, 0x85, 
+  /*           0x10 */ 0x81, 0xf4, 0xaa, 0x6b, 0xb4, 0x2b, 0x94, 0x57, 
+  /*           0x18 */ 0x7e, 0x37, 0x48, 0x58, 0x19, 0x9b, 0x2e, 0xb8 
 };
 
 int main()
@@ -100,36 +179,40 @@ int main()
   SecureRecord mRecord4;
   int ret = 0;
 
-  mRecord1._key = "record1";
-  mRecord1._data = (unsigned char *)record1;
-  mRecord1._dataSize = strlen(record1);
+  mRecord1._key = "A Title for a content 1";
+  mRecord1._keyId = (unsigned char *)kid1;
+  mRecord1._contentKey = (unsigned char *)kc1;
+  mRecord1._contentKeySize = AES_BLOCK_SIZE*2;
   mRecord1._tag = (unsigned char *)tag1;
   mRecord1._tagSize = SHA256_DIGEST_LENGTH;
 
   ret = checkRecordCrypto(&mRecord1);
   printf ("===> record1 vs tag1: %s (OK expected) => %s\n", ret ? "OK":"NOK", ret ? "PASSED":"FAILED");
 
-  mRecord2._key = "record2";
-  mRecord2._data = (unsigned char *)record2;
-  mRecord2._dataSize = strlen(record2);
+  mRecord2._key = "A Title for a content 2";
+  mRecord2._keyId = (unsigned char *)kid2;
+  mRecord2._contentKey = (unsigned char *)kc2;
+  mRecord2._contentKeySize = AES_BLOCK_SIZE*2;
   mRecord2._tag = (unsigned char *)tag2;
   mRecord2._tagSize = SHA256_DIGEST_LENGTH;
 
   ret = checkRecordCrypto(&mRecord2);
   printf ("===> record2 vs tag2: %s (OK expected) => %s\n", ret ? "OK":"NOK", ret ? "PASSED":"FAILED");
 
-  mRecord3._key = "record1";
-  mRecord3._data = (unsigned char *)record1;
-  mRecord3._dataSize = strlen(record1);
+  mRecord3._key = "A Title for a content 1";
+  mRecord3._keyId = (unsigned char *)kid1;
+  mRecord3._contentKey = (unsigned char *)kc1;
+  mRecord3._contentKeySize = AES_BLOCK_SIZE*2;
   mRecord3._tag = (unsigned char *)tag2;
   mRecord3._tagSize = SHA256_DIGEST_LENGTH;
 
   ret = checkRecordCrypto(&mRecord3);
   printf ("===> record1 vs tag2: %s (NOK expected) => %s\n", ret ? "OK":"NOK", ret ? "FAILED":"PASSED");
 
-  mRecord4._key = "record2";
-  mRecord4._data = (unsigned char *)record2;
-  mRecord4._dataSize = strlen(record2);
+  mRecord4._key = "A Title for a content 2";
+  mRecord4._keyId = (unsigned char *)kid2;
+  mRecord4._contentKey = (unsigned char *)kc2;
+  mRecord4._contentKeySize = AES_BLOCK_SIZE*2;
   mRecord4._tag = (unsigned char *)tag1;
   mRecord4._tagSize = SHA256_DIGEST_LENGTH;
 

@@ -19,7 +19,11 @@
 
 #include "sqlite3.h"
 
+#ifdef DRM_HOST_KERNEL_TEST
+#define C_NV_DATABASE_PATH	"./host_nv.db"
+#else
 #define C_NV_DATABASE_PATH	"/data/nv.db"
+#endif
 
 /**
  *@brief

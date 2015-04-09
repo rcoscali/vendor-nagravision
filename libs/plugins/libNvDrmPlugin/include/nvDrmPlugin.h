@@ -17,7 +17,9 @@
 #ifndef __NV_DRM_PLUGIN_H__
 #define __NV_DRM_PLUGIN_H__
 
+#ifdef USE_LIBXML2
 #include <libxml/tree.h>
+#endif
 #include <DrmEngineBase.h>
 
 #ifndef SYM_EXPORT
@@ -269,11 +271,12 @@ namespace android
 		    off64_t offset);
 
   private:
-
+#ifdef USE_LIBXML2
     /*
      * Media Presentation Description (MPD) parsing
      */
     bool parseMpd(const String8 &path);
+#endif
 
     /*
      * Open a decrypt session

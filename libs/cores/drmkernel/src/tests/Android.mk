@@ -82,3 +82,46 @@ LOCAL_SHARED_LIBRARIES := \
     libcrypto
 
 include $(BUILD_HOST_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES:= \
+	dbTest.c \
+	../DrmKernel.c \
+	../nvDatabase.c \
+	../nvDatabaseSecureTable.c
+LOCAL_C_INCLUDES += \
+	$(TOP)/external/sqlite/dist \
+	$(TOP)/external/openssl/include \
+	$(TOP)/frameworks/native/include \
+	$(TOP)/system/core/include \
+	$(LOCAL_PATH)/../../include
+LOCAL_MODULE:= DrmKernelTest_db
+LOCAL_MODULE_TAGS := optional
+LOCAL_CFLAGS := -fvisibility=hidden
+LOCAL_SHARED_LIBRARIES := \
+    libsqlite \
+    libcrypto \
+    liblog
+
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES:= \
+	dbTest.c \
+	../DrmKernel.c \
+	../nvDatabase.c \
+	../nvDatabaseSecureTable.c
+LOCAL_C_INCLUDES += \
+	$(TOP)/external/sqlite/dist \
+	$(TOP)/external/openssl/include \
+	$(TOP)/frameworks/native/include \
+	$(TOP)/system/core/include \
+	$(LOCAL_PATH)/../../include
+LOCAL_MODULE:= HostDrmKernelTest_db
+LOCAL_MODULE_TAGS := optional
+LOCAL_CFLAGS := -DDRM_HOST_KERNEL_TEST=1 -fvisibility=hidden
+LOCAL_SHARED_LIBRARIES := \
+    libsqlite \
+    libcrypto
+
+include $(BUILD_HOST_EXECUTABLE)

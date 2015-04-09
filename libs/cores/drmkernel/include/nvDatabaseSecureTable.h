@@ -31,8 +31,6 @@ typedef struct SecureRecordSchema
   const char* _tableName;
   // the name of the key column
   const char* _keyColumn;
-  // name of the data column
-  const char* _dataColumn;
   // create table query
   const char* _createQuery;
   // insert record query
@@ -41,32 +39,36 @@ typedef struct SecureRecordSchema
   const char* _selectQuery;
   //delete record query
   const char* _deleteQuery;
+  //get key by keyid record query
+  const char* _keyByKeyidQuery;
 } SecureRecordSchema;
 
 static SecureRecordSchema gSecureTable =
 {
   "Secure",
   "KEY",
-  "DATA",
-  "CREATE TABLE IF NOT EXISTS Secure(KEY TEXT NOT NULL, DATA BLOB);",
-  "INSERT INTO Secure(KEY, DATA) VALUES(?, ?)",
-  "SELECT DATA FROM Secure WHERE KEY=",
-  "DELETE FROM Secure WHERE KEY="
+  "CREATE TABLE IF NOT EXISTS Secure(KEY TEXT NOT NULL, KID BLOB, KCLEN INTEGER, THEKC BLOB, TAGLEN INTEGER, UNTAG BLOB);",
+  "INSERT INTO Secure(KEY, KID, KCLEN, THEKC, TAGLEN, UNTAG) VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+  "SELECT KEY, KID, KCLEN, THEKC, TAGLEN, UNTAG FROM Secure WHERE KEY=?1",
+  "DELETE FROM Secure WHERE KEY=?1",
+  "SELECT KEY, KID, KCLEN, THEKC, TAGLEN, UNTAG FROM Secure WHERE KID=?1",
 };
 
 /**
  *@brief
- *  Deifine the secure record structure
+ *  Define the secure record structure
  */
 typedef struct SecureRecord 
 {
   // The key for the record
   const char* _key;
+  // ID of key used for content protection
+  unsigned char* _keyId;
   // The corresponding data associated with the key
   // memory should be freed by the caller
-  unsigned char* _data;
+  unsigned char* _contentKey;
   // The size in bytes of the data in the record
-  unsigned int _dataSize;
+  unsigned int _contentKeySize;
   // The corresponding tag associated with the key
   // memory should be freed by the caller
   unsigned char* _tag;
@@ -82,13 +84,13 @@ typedef struct SecureRecord
  *  is deleted and replaced by the new insert.
  *@param [in] pxDatabase
  *    a pointer to the database connection
- *@pram [in] xRecord
- *  A structure containing the record to be inserted
+ *@pram [in] pxRecord
+ *  A pointer to the structure containing the record to be inserted
  *@return SQLITE_OK
  *  The record was inserted succesfully
  *  otherwise the record was not inserted
  */
-int insertSecureRecord(sqlite3* pxDatabase, SecureRecord xRecord);
+int insertSecureRecord(sqlite3* pxDatabase, SecureRecord *pxRecord);
 
 /**
  *@brief
@@ -96,7 +98,7 @@ int insertSecureRecord(sqlite3* pxDatabase, SecureRecord xRecord);
  *@param [in] pxDatabase
  *    a pointer to the database connection
  *@return SQLITE_OK
- *  The record was insertetable was createdd succesfully
+ *  The record was insertetable was created succesfully
  *  otherwise the record was not insertedtable was not created
  */
 int createSecureTable(sqlite3* pxDatabase);
@@ -114,7 +116,7 @@ int createSecureTable(sqlite3* pxDatabase);
  *  The record was retrieved succesfully
  *  otherwise the record was not retrieved
  */
-int selectSecureRecord(sqlite3* pxDatabase, const char* xKey, SecureRecord* pxRecord);
+int selectSecureRecord(sqlite3* pxDatabase, const char* xKey, const uint8_t *xKeyId, SecureRecord* pxRecord);
 
 /**
  *@brief

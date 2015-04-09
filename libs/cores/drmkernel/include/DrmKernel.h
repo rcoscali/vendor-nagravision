@@ -225,6 +225,7 @@ extern "C" {
   int DrmKernel_NvDrmPlugin_onDecrypt(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, int decryptUnitId, const struct NV_DrmBuffer_st *encBuffer, struct NV_DrmBuffer_st *decBuffer, struct NV_DrmBuffer_st *IV);
   int DrmKernel_NvDrmPlugin_onFinalizeaDecryptUnit(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, int decryptUnitId);
   int DrmKernel_NvDrmPlugin_onPread(int uniqueId, struct NV_DecryptHandle_st *decryptHandle, void *buffer, ssize_t numBytes, off64_t offset);
+  status_t DrmKernel_getRightKey(const uint8_t *, uint8_t **, size_t *);
   
   
   

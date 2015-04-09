@@ -27,6 +27,10 @@
 #include <openssl/evp.h>
 #include <openssl/sha.h>
 
+#ifdef DRM_HOST_KERNEL_TEST
+typedef __off64_t off64_t;
+#endif
+
 #include "DrmKernel.h"
 #include "nvDatabase.h"
 #include "nvDatabaseSecureTable.h"
@@ -38,6 +42,7 @@
 #define USTR(x) ((unsigned char *)x)
 
 #define NV_ASSERT(msg, expr) if ((!expr)) { ALOGE("DrmKernel ASSERT Failure: " msg); exit(1); }
+#define NVMIN(a, b)  ((a) < (b) ? (a) : (b))
 
 static const char *mActionNames[NV_DRM_ACTION_NUMBER] = NV_DRM_ACTION_NAMES;
 
@@ -56,6 +61,38 @@ const uint8_t iv[AES_BLOCK_SIZE] = {
 
 
 /*
+ * 
+ */
+#ifdef DRM_HOST_KERNEL_TEST
+#ifdef __cplusplus
+extern "C"
+#endif
+static void printBuf(const char *msg, const uint8_t *buf, const size_t len)
+{
+  char outbuf[1024];
+  unsigned int i = 0;
+
+  bzero(outbuf, 1024);
+  for (i = 0; i < NVMIN(len, 1024); i++)
+    {
+      uint8_t v = buf[i];
+      sprintf(&outbuf[i*2], "%02x ", v);
+    }
+  ALOGV("%s = %s", msg, outbuf);
+}
+#else
+#ifdef __cplusplus
+extern "C"
+#endif
+static inline void printBuf(__attribute__((unused)) const char *msg, 
+			    __attribute__((unused)) const uint8_t *buf, 
+			    __attribute__((unused)) const size_t len)
+{
+  
+}
+#endif
+
+/*
  * checkRecordCrypto
  *
  * Hash & Cipher a record for checking integrity & authenticity
@@ -64,31 +101,53 @@ const uint8_t iv[AES_BLOCK_SIZE] = {
 extern "C"
 #endif
 static int checkRecordCrypto(SecureRecord* pxRecord) {
-  ALOGV("checkRecordCrypto - Entry\n");
+  ALOGV("checkRecordCrypto - Entry");
+  int ret = 0;
 
-  int ret = -1;
-  int outsz;
-  unsigned char hash[SHA256_DIGEST_LENGTH+1];
-  unsigned char tag[SHA256_DIGEST_LENGTH+1];
+  if (pxRecord)
+    {
 
-  SHA256_CTX sha256;
-  EVP_CIPHER_CTX ectx;
-  
-  SHA256_Init(&sha256);
-  SHA256_Update(&sha256, pxRecord->_data, pxRecord->_dataSize);
-  SHA256_Final(hash, &sha256);
+      int outsz;
+      unsigned char hash[SHA256_DIGEST_LENGTH+1];
+      unsigned char tag[SHA256_DIGEST_LENGTH+1];
+      uint8_t buf[256];
+      unsigned int bufix = 0;
       
-  EVP_CIPHER_CTX_init(&ectx);
-  EVP_EncryptInit_ex(&ectx, EVP_aes_128_cbc(), NULL, hmacKey, iv);
-  EVP_EncryptUpdate(&ectx, tag, &outsz, hash, SHA256_DIGEST_LENGTH);
-  /* Don't need to do the final step... 
-     no more blocks as sha length is twice aes length 
-  */
-  
-  if (memcmp (tag, pxRecord->_tag, SHA256_DIGEST_LENGTH) == 0)
-    ret = 1;
-  else
-    ret = 0;
+      SHA256_CTX sha256;
+      EVP_CIPHER_CTX ectx;
+      
+      strncpy(STR(buf + bufix), pxRecord->_key, 255);
+      bufix += NVMIN(strlen(pxRecord->_key)+1, 255);
+
+      memcpy(STR(buf + bufix), pxRecord->_keyId, AES_BLOCK_SIZE);
+      bufix += AES_BLOCK_SIZE;
+
+      buf[bufix] = (pxRecord->_contentKeySize & 0xFF00)>>8;
+      bufix++;
+
+      buf[bufix] = (pxRecord->_contentKeySize & 0xFF);
+      bufix++;
+
+      memcpy(buf + bufix, pxRecord->_contentKey, pxRecord->_contentKeySize);
+      bufix += pxRecord->_contentKeySize;
+
+      SHA256_Init(&sha256);
+      SHA256_Update(&sha256, buf, bufix);
+      SHA256_Final(hash, &sha256);
+      
+      EVP_CIPHER_CTX_init(&ectx);
+      EVP_EncryptInit_ex(&ectx, EVP_aes_128_cbc(), NULL, hmacKey, iv);
+      EVP_EncryptUpdate(&ectx, tag, &outsz, hash, SHA256_DIGEST_LENGTH);
+
+      /* Don't need to do the final step... 
+	 no more blocks as sha 256 length is twice aes length 
+      */
+      
+      if (memcmp (tag, pxRecord->_tag, SHA256_DIGEST_LENGTH) == 0)
+	ret = 1;
+      else
+	ret = 0;
+    }
   
   ALOGV("checkRecordCrypto - Exit (%d)\n", ret);
   return ret;
@@ -102,41 +161,84 @@ static int insertRecord(NvDatabaseConnection* pxDatabaseConnection,
   ALOGV("insertRecord - Entry\n");
   int ret = 0;
   
-  if (pxRecord) {
-    ALOGV("Record to insert: name = '%s' value = '%s' (sz=%d)\n",
-	  pxRecord->_key, pxRecord->_data, pxRecord->_dataSize);
+  if (pxRecord) 
+    {
+      ALOGV("Record to insert: name = '%s'", pxRecord->_key);
 
-    /*
-      Warning: this assume tag size is SHA256 dgst size (32 bytes)
-     */
-    unsigned int i;
-    char outLogBuf[256];
-    for (i=0; i< pxRecord->_tagSize; i++) {
-      sprintf (&outLogBuf[i*2], "%02x", pxRecord->_tag[i]);
+      // Check if record is valid
+      if (checkRecordCrypto(pxRecord)) 
+	{
+	  ALOGV("*** Record integrity & authenticity is valid !\n");
+	  
+	  if (pxDatabaseConnection) 
+	    {
+	      if (SQLITE_OK == openNvDatabase(pxDatabaseConnection))
+		{
+		  ret = (insertSecureRecord(pxDatabaseConnection->_pDatabase,
+					    pxRecord) == SQLITE_OK);
+		  ALOGV(   "insertRecord - saved record to db with:");
+		  ALOGV(   "insertRecord -    _key            = %s", pxRecord->_key);
+		  printBuf("insertRecord -    _keyId         ", pxRecord->_keyId, AES_BLOCK_SIZE);
+		  printBuf("insertRecord -    _contentKey    ", pxRecord->_contentKey, pxRecord->_contentKeySize);
+		  ALOGV(   "insertRecord -    _contentKeySize = %d", pxRecord->_contentKeySize);
+		  printBuf("insertRecord -    _tag           ", pxRecord->_tag, pxRecord->_tagSize);
+		  ALOGV(   "insertRecord -    _tagSize        = %d", pxRecord->_tagSize);
+		  closeNvDatabase(pxDatabaseConnection);
+		}
+	      else
+		{
+		  ALOGE("insertRecord - Couldn't open database");
+		}
+	    }
+	  
+	}
+      else
+	{
+	  ALOGV("*** Record integrity & authenticity is NOT valid !\n");
+	}
     }
-    ALOGV("Record tag = %s", outLogBuf);
-
-    // Check if record is valid
-    if (checkRecordCrypto(pxRecord)) 
-      {
-	ALOGV("*** Record integrity & authenticity is valid !\n");
-        
-	if (pxDatabaseConnection) 
-	  {
-	    if (SQLITE_OK == openNvDatabase(pxDatabaseConnection))
-	      ret = (insertSecureRecord(pxDatabaseConnection->_pDatabase,
-					*pxRecord) == SQLITE_OK);
-	  }
-	
-	closeNvDatabase(pxDatabaseConnection);
-      }
-    else
-      {
-	ALOGV("*** Record integrity & authenticity is NOT valid !\n");
-      }
-  }
-
+  
   ALOGV("insertRecord - Exit (%d)\n", ret);
+  return ret;
+}
+
+static int insertPersoRecord(NvDatabaseConnection* pxDatabaseConnection,
+			     SecureRecord* pxRecord) 
+{
+  ALOGV("insertPersoRecord - Entry\n");
+  int ret = 0;
+  
+  if (pxRecord && !strncmp(pxRecord->_key, "PERSO", 5)) 
+    {
+      ALOGV("Record to insert: name = '%s'", pxRecord->_key);
+      
+      if (pxDatabaseConnection) 
+	{
+	  if (SQLITE_OK == openNvDatabase(pxDatabaseConnection))
+	    {
+	      ret = (insertSecureRecord(pxDatabaseConnection->_pDatabase,
+					pxRecord) == SQLITE_OK);
+	      ALOGV(   "insertRecord - saved record to db with:");
+	      ALOGV(   "insertRecord -    _key            = %s", pxRecord->_key);
+	      printBuf("insertRecord -    _keyId         ", pxRecord->_keyId, AES_BLOCK_SIZE);
+	      printBuf("insertRecord -    _contentKey    ", pxRecord->_contentKey, pxRecord->_contentKeySize);
+	      ALOGV(   "insertRecord -    _contentKeySize = %d", pxRecord->_contentKeySize);
+	      printBuf("insertRecord -    _tag           ", pxRecord->_tag, pxRecord->_tagSize);
+	      ALOGV(   "insertRecord -    _tagSize        = %d", pxRecord->_tagSize);
+	      closeNvDatabase(pxDatabaseConnection);
+	    }
+	  else
+	    {
+	      ALOGE("insertPersoRecord - Couldn't open database");	      
+	    }
+	}
+    }
+  else
+    {
+      ALOGV("*** Record integrity & authenticity is NOT valid !\n");
+    }
+  
+  ALOGV("insertPersoRecord - Exit (%d)\n", ret);
   return ret;
 }
 
@@ -147,7 +249,7 @@ static int insertRecord(NvDatabaseConnection* pxDatabaseConnection,
 extern "C"
 #endif
 static int getRecord(NvDatabaseConnection* pxDatabaseConnection,
-                     const char* pxKey, SecureRecord* pxRecord) {
+                     const char* pxKey, const uint8_t *pxKeyId, SecureRecord* pxRecord) {
   ALOGV("getRecord - Entry\n");
   int ret = 0;
 
@@ -156,10 +258,21 @@ static int getRecord(NvDatabaseConnection* pxDatabaseConnection,
     {
       if (SQLITE_OK == openNvDatabase(pxDatabaseConnection)) 
         {
-          selectSecureRecord(pxDatabaseConnection->_pDatabase, pxKey,
+          selectSecureRecord(pxDatabaseConnection->_pDatabase, pxKey, pxKeyId, 
                              pxRecord);
+
+	  ALOGV(   "getRecord - got record from db with:");
+	  ALOGV(   "getRecord -    pxKey = %s", pxKey);
+	  printBuf("getRecord -    pxKeyId", pxKeyId, AES_BLOCK_SIZE);
+	  ALOGV(   "getRecord - result set is:");
+	  ALOGV(   "getRecord -    _key            = %s", pxRecord->_key);
+	  printBuf("getRecord -    _keyId         ", pxRecord->_keyId, AES_BLOCK_SIZE);
+	  printBuf("getRecord -    _contentKey    ", pxRecord->_contentKey, pxRecord->_contentKeySize);
+	  ALOGV(   "getRecord -    _contentKeySize = %d", pxRecord->_contentKeySize);
+	  printBuf("getRecord -    _tag           ", pxRecord->_tag, pxRecord->_tagSize);
+	  ALOGV(   "getRecord -    _tagSize        = %d", pxRecord->_tagSize);
                 
-          ret = pxRecord->_dataSize;
+          ret = pxRecord->_tagSize + pxRecord->_contentKeySize;
         }
       else
         {
@@ -326,10 +439,10 @@ DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId,
 
       SecureRecord record;
       record._key = "PERSO";
-      record._data = USTR(
-                          DrmInfo_AttributeGet(drmInfo, "PERSO", &record._dataSize));
+      record._contentKey = USTR("");
+      record._contentKeySize = 0;
       record._tag = USTR(
-                          DrmInfo_AttributeGet(drmInfo, "PERSO_TAG", &record._tagSize));
+                          DrmInfo_AttributeGet(drmInfo, "PERSO", &record._tagSize));
 
       drmInfoStatus->statusCode =
         insertRecord(&mDatabaseConnection, &record) ?
@@ -440,13 +553,40 @@ status_t DrmKernel_NvDrmPlugin_onSaveRights(int uniqueId,
   ALOGV("contentId = '%s'\n", contentId);
 
   status_t retVal = NV_DRM_ERROR_UNKNOWN;
-
   SecureRecord record;
+  uint8_t *dataptr = (uint8_t *)drmRights->data->data;
+
   record._key = contentId;
-  record._data = USTR(contentId);
-  record._dataSize = (unsigned int) strlen(contentId);
-  record._tag = USTR(drmRights->data->data);
-  record._tagSize = (unsigned int) drmRights->data->length;
+  dataptr += strlen(contentId) +1;
+  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - index = %d", (dataptr - (uint8_t *)drmRights->data->data));
+
+  record._keyId = dataptr;
+  dataptr += AES_BLOCK_SIZE;
+  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - index = %d", (dataptr - (uint8_t *)drmRights->data->data));
+
+  record._contentKeySize = *dataptr << 8;
+  dataptr++;
+  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - index = %d", (dataptr - (uint8_t *)drmRights->data->data));
+
+  record._contentKeySize += *dataptr;
+  dataptr++;
+  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - index = %d", (dataptr - (uint8_t *)drmRights->data->data));
+
+  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - key size = %d", record._contentKeySize);
+
+  record._contentKey = USTR(dataptr);
+  dataptr += record._contentKeySize;
+  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - index = %d", (dataptr - (uint8_t *)drmRights->data->data));
+
+  record._tag = USTR(dataptr);
+  record._tagSize = (unsigned int)drmRights->data->length - (dataptr - (uint8_t *)drmRights->data->data);
+  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - index = %d", (dataptr - (uint8_t *)drmRights->data->data));
+  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - tag size = %d", record._tagSize);
+
+  ALOGV("record.key = %s\n", record._key);
+  ALOGV("record.contentKeySize = %d\n", record._contentKeySize);
+  ALOGV("record.tagSize = %d\n", record._tagSize);
+
       
   if (insertRecord(&mDatabaseConnection, &record)) 
     {
@@ -464,7 +604,7 @@ status_t DrmKernel_NvDrmPlugin_onSaveRights(int uniqueId,
  *
  */
 struct NV_DrmInfo_st *
-DrmKernel_NvDrmPlugin_onAcquireDrmInfo(int uniqueId,
+DrmKernel_NvDrmPlugin_onAcquireDrmInfo(__attribute__((unused)) int uniqueId,
                                        const struct NV_DrmInfoRequest_st *drmInfoRequest) {
   ALOGV("DrmKernel_NvDrmPlugin_onAcquireDrmInfo - Entry\n");
 
@@ -495,14 +635,20 @@ DrmKernel_NvDrmPlugin_onAcquireDrmInfo(int uniqueId,
     case NV_DrmInfoRequest_TYPE_REGISTRATION_INFO: {
       SecureRecord rec;
       rec._key = "PERSO";
-      rec._data = (unsigned char *) NULL;
-      rec._dataSize = 0;
+      rec._keyId = (unsigned char *) NULL;
+      rec._contentKey = (unsigned char *) NULL;
+      rec._contentKeySize = 0;
+      rec._tag = (unsigned char *) NULL;
+      rec._tagSize = 0;
 
       ALOGV("Get perso record ...\n");
-      if (getRecord(&mDatabaseConnection, "PERSO", &rec)) {
+      if (getRecord(&mDatabaseConnection, "PERSO", NULL, &rec)) {
         DrmInfo_AttributePut(drmInfo, "PERSO", "yes");
-        DrmInfo_AttributePut(drmInfo, "UNIQUE_ID", (const char *)rec._data);
-        free(rec._data);
+        DrmInfo_AttributePut(drmInfo, "UNIQUE_ID", (const char *)rec._tag);
+        if (rec._key) free((void *)rec._key);
+        if (rec._keyId) free((void *)rec._keyId);
+        if (rec._contentKey) free((void *)rec._contentKey);
+        if (rec._tag) free((void *)rec._tag);
       }
     }
       break;
@@ -532,18 +678,22 @@ DrmKernel_NvDrmPlugin_onAcquireDrmInfo(int uniqueId,
  *
  */
 enum NV_RightsStatus_enum
-DrmKernel_NvDrmPlugin_onCheckRightsStatus(int uniqueId, 
+DrmKernel_NvDrmPlugin_onCheckRightsStatus(__attribute__((unused)) int uniqueId, 
                                           const char *contentId,
-                                          int action) 
+                                          __attribute__((unused)) int action) 
 {
   ALOGV("DrmKernel_NvDrmPlugin_onCheckRightsStatus - Entry\n");
+
   int rightsStatus = NV_RightsStatus_RIGHTS_INVALID;
   SecureRecord record;
   record._key = contentId;
-  record._data = (unsigned char *) NULL;
-  record._dataSize = 0;
+  record._keyId = (unsigned char *) NULL;
+  record._contentKey = (unsigned char *) NULL;
+  record._contentKeySize = 0;
+  record._tag = (unsigned char *) NULL;
+  record._tagSize = 0;
 
-  if (!getRecord(&mDatabaseConnection, contentId, &record))
+  if (!getRecord(&mDatabaseConnection, contentId, NULL, &record))
     ALOGE(
           "NvDrmPlugin::onCheckRightsStatus() - unable to get rights for %s",
           (const char*) contentId);
@@ -558,8 +708,11 @@ DrmKernel_NvDrmPlugin_onCheckRightsStatus(int uniqueId,
       else 
 	{
 	  rightsStatus = NV_RightsStatus_RIGHTS_VALID;
-	  ALOGV("DrmKernel_NvDrmPlugin_onCheckRightsStatus - Valid Rights\n");
-	  free(record._data);
+	  ALOGV("DrmKernel_NvDrmPlugin_onCheckRightsStatus - Valid Right for content '%s'\n", contentId);
+	  free((void *)record._key);
+	  free((void *)record._keyId);
+	  free((void *)record._contentKey);
+	  free((void *)record._tag);
 	}
     }
 
@@ -567,3 +720,52 @@ DrmKernel_NvDrmPlugin_onCheckRightsStatus(int uniqueId,
   return rightsStatus;
 }
 
+#ifdef __cplusplus
+extern "C"
+#endif
+__attribute__ ((visibility ("default"))) 
+status_t DrmKernel_getRightKey(const uint8_t *xKeyId, uint8_t **ppxKey, size_t *pxKeylen)
+{
+  ALOGV("DrmKernel_getRightKey - Entry\n");
+
+  status_t status = NV_DRM_ERROR_UNKNOWN;
+
+  SecureRecord record;
+  record._key = NULL;
+  record._keyId = USTR(xKeyId);
+  record._contentKey = (unsigned char *) NULL;
+  record._contentKeySize = 0;
+  record._tag = (unsigned char *) NULL;
+  record._tagSize = 0;
+
+  if (!getRecord(&mDatabaseConnection, NULL, xKeyId, &record))
+    ALOGE(
+          "NvDrmPlugin::onGetRightKey() - unable to get right");
+  
+  else 
+    {
+      if (!checkRecordCrypto(&record)) 
+	{
+	  ALOGV(
+		"DrmKernel_getRightKey - Invalid Right\n");
+	} 
+      else 
+	{
+	  ALOGV("DrmKernel_getRightKey - Valid Right\n");
+
+	  *ppxKey = (uint8_t *)malloc(record._contentKeySize);
+	  *pxKeylen = record._contentKeySize;
+	  memcpy(*ppxKey, record._contentKey, record._contentKeySize);
+
+	  status = NV_NO_ERROR;
+
+	  free((void *)record._key);
+	  free((void *)record._keyId);
+	  free((void *)record._contentKey);
+	  free((void *)record._tag);
+	}
+    }
+
+  ALOGV("DrmKernel_getRightKey - Exit (%d)\n", status);
+  return status;  
+}

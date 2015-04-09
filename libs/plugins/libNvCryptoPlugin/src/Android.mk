@@ -16,6 +16,9 @@
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
+
+WITHOUT_LIBCOMPILER_RT = yes
+
 LOCAL_MODULE:= libnvcryptoplugin
 LOCAL_MODULE_OWNER := nagravision
 LOCAL_MODULE_TAGS:= optional
@@ -41,6 +44,7 @@ LOCAL_STATIC_LIBRARIES := \
 	libnvutils
 
 LOCAL_SHARED_LIBRARIES += \
+	libnvdrmplugin \
         libstagefright_foundation \
 	libcrypto \
 	liblog \

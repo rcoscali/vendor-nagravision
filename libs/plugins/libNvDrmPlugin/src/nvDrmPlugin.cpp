@@ -33,10 +33,18 @@
 #include <drm/DrmInfoRequest.h>
 #include <drm/DrmSupportInfo.h>
 
+#ifdef USE_LIBXML2
 #include <libxml/parser.h>
+#endif
 
 #include "nvDrmPlugin.h"
+#ifdef USE_LIBXML2
 #include "parseMpdHelpers.h"
+#else
+#include <vector>
+#include <string>
+using namespace std;
+#endif
 #include "drmNvToDroid.h"
 #include "drmDroidToNv.h"
 #include "DrmKernel.h"
@@ -93,9 +101,9 @@ initRefDataMaps()
 #define MAPINSERT(x, y, z) x.insert(pair<const char *, String8>(y,String8(z)))
 
   // Supported DRM scheme UUIDs
-  MAPINSERT(drmSchemes, "MSPlayReady", "9a04f079-9840-4286-ab92-e65be0885f95");
-  MAPINSERT(  drmSchemes, "Dummy1", "00000000-0000-0000-0000-000000000001");
-  MAPINSERT(  drmSchemes, "Dummy2", "00000000-0000-0000-0000-000000000002");
+  MAPINSERT(  drmSchemes, "MSPlayReady", "9a04f079-9840-4286-ab92-e65be0885f95");
+  MAPINSERT(  drmSchemes, "Dummy1",      "00000000-0000-0000-0000-000000000001");
+  MAPINSERT(  drmSchemes, "Dummy2",      "00000000-0000-0000-0000-000000000002");
   MAPINSERT(  drmSchemes, "Nagravision", "deadbeef-dead-beef-2403-deadadd0beef");
 
   // Supported mimeTypes
@@ -290,7 +298,7 @@ NvDrmPlugin::onProcessDrmInfo(int uniqueId, const DrmInfo *drmInfo)
  */
 SYM_EXPORT status_t 
 NvDrmPlugin::onSetOnInfoListener(int uniqueId,
-				 const IDrmEngine::OnInfoListener *infoListener) 
+				 __attribute__((unused)) const IDrmEngine::OnInfoListener *infoListener) 
 {
   ALOGV("NvDrmPlugin::onSetOnInfoListener() - Enter : %d", uniqueId);
 
@@ -393,6 +401,7 @@ NvDrmPlugin::onAcquireDrmInfo(int uniqueId,
   return drmInfo;
 }
 
+#ifdef USE_LIBXML2
 /*
  * NvDrmPlugin::parseMpd
  */
@@ -432,6 +441,7 @@ NvDrmPlugin::parseMpd(const String8 &path)
 
   return (cipherSchemeOk && drmSchemeOk && embedMediaOk);
 }
+#endif
 
 /*
  * NvDrmPlugin::onCanHandle
@@ -443,12 +453,14 @@ NvDrmPlugin::onCanHandle(int uniqueId, const String8 &path)
 
   String8 extension = path.getPathExtension();
   extension.toLower();
-  
+
+#ifdef USE_LIBXML2  
   if (String8(".mpd") == extension) 
     {
       ALOGV("NvDrmPlugin::canHandle() - parsing MPD");
       return parseMpd(path);
     }
+#endif
 
   for (map<const char *, String8>::iterator it = fileExts.begin();
        it != fileExts.end();
@@ -471,7 +483,7 @@ NvDrmPlugin::onCanHandle(int uniqueId, const String8 &path)
  */
 SYM_EXPORT String8 
 NvDrmPlugin::onGetOriginalMimeType(int uniqueId,
-				   const String8 &path, int fd) 
+				   const String8 &path, __attribute__((unused)) int fd) 
 {
   ALOGV("NvDrmPlugin::onGetOriginalMimeType() - Enter : %d path='%s'", uniqueId, path.string());
   String8 str("");
@@ -487,9 +499,9 @@ NvDrmPlugin::onGetOriginalMimeType(int uniqueId,
  * NvDrmPlugin::onGetDrmObjectType
  */
 SYM_EXPORT int 
-NvDrmPlugin::onGetDrmObjectType(      int      uniqueId, 
-				      const String8 &path, 
-				      const String8 &mimeType) 
+NvDrmPlugin::onGetDrmObjectType(int      uniqueId, 
+				__attribute__((unused)) const String8 &path, 
+				__attribute__((unused)) const String8 &mimeType) 
 {
   ALOGV("NvDrmPlugin::onGetDrmObjectType() - Enter : %d", uniqueId);
   return DrmObjectType::UNKNOWN;
@@ -515,9 +527,9 @@ NvDrmPlugin::onCheckRightsStatus(int uniqueId, const String8 &path, int action)
  */
 SYM_EXPORT status_t
 NvDrmPlugin::onConsumeRights(int            uniqueId, 
-			     DecryptHandle *decryptHandle,
-			     int            action, 
-			     bool           reserve) 
+			     __attribute__((unused)) DecryptHandle *decryptHandle,
+			     __attribute__((unused)) int            action, 
+			     __attribute__((unused)) bool           reserve) 
 {
   ALOGV("NvDrmPlugin::onConsumeRights() - Enter : %d", uniqueId);
   return DRM_NO_ERROR;
@@ -528,9 +540,9 @@ NvDrmPlugin::onConsumeRights(int            uniqueId,
  */
 SYM_EXPORT status_t 
 NvDrmPlugin::onSetPlaybackStatus(int            uniqueId, 
-				 DecryptHandle *decryptHandle,
-				 int            playbackStatus, 
-				 int64_t        position) 
+				 __attribute__((unused)) DecryptHandle *decryptHandle,
+				 __attribute__((unused)) int            playbackStatus, 
+				 __attribute__((unused)) int64_t        position) 
 {
   ALOGV("NvDrmPlugin::onSetPlaybackStatus() - Enter : %d", uniqueId);
   return DRM_NO_ERROR;
@@ -540,10 +552,10 @@ NvDrmPlugin::onSetPlaybackStatus(int            uniqueId,
  * NvDrmPlugin::onValidateAction
  */
 SYM_EXPORT bool 
-NvDrmPlugin::onValidateAction(      int                uniqueId, 
-				    const String8           &path,
-			            int                action, 
-				    const ActionDescription &description) 
+NvDrmPlugin::onValidateAction(int                      uniqueId, 
+			      __attribute__((unused)) const String8           &path,
+			      __attribute__((unused)) int                      action, 
+			      __attribute__((unused)) const ActionDescription &description) 
 {
   ALOGV("NvDrmPlugin::onValidateAction() - Enter : %d", uniqueId);
   return true;
@@ -554,7 +566,7 @@ NvDrmPlugin::onValidateAction(      int                uniqueId,
  */
 SYM_EXPORT status_t 
 NvDrmPlugin::onRemoveRights(      int      uniqueId, 
-				  const String8 &path) 
+				  __attribute__((unused)) const String8 &path) 
 {
   ALOGV("NvDrmPlugin::onRemoveRights() - Enter : %d", uniqueId);
   return DRM_NO_ERROR;
@@ -575,7 +587,7 @@ NvDrmPlugin::onRemoveAllRights(int uniqueId)
  */
 SYM_EXPORT status_t 
 NvDrmPlugin::onOpenConvertSession(int uniqueId, 
-				  int convertId) 
+				  __attribute__((unused)) int convertId) 
 {
   ALOGV("NvDrmPlugin::onOpenConvertSession() - Enter : %d", uniqueId);
   return DRM_NO_ERROR;
@@ -586,7 +598,7 @@ NvDrmPlugin::onOpenConvertSession(int uniqueId,
  */
 SYM_EXPORT DrmConvertedStatus* 
 NvDrmPlugin::onConvertData(      int        uniqueId, 
-			         int        convertId, 
+			         __attribute__((unused)) int        convertId, 
 				 const DrmBuffer *inputData)
 {
   ALOGV("NvDrmPlugin::onConvertData() - Enter : %d", uniqueId);
@@ -609,7 +621,7 @@ NvDrmPlugin::onConvertData(      int        uniqueId,
  */
 SYM_EXPORT DrmConvertedStatus* 
 NvDrmPlugin::onCloseConvertSession(int uniqueId, 
-				   int convertId) 
+				   __attribute__((unused)) int convertId) 
 {
   ALOGV("NvDrmPlugin::onCloseConvertSession() - Enter : %d", uniqueId);
   return new DrmConvertedStatus(DrmConvertedStatus::STATUS_OK, NULL, 0 /*offset*/);
@@ -620,10 +632,10 @@ NvDrmPlugin::onCloseConvertSession(int uniqueId,
  */
 SYM_EXPORT status_t 
 NvDrmPlugin::onOpenDecryptSession(int            uniqueId, 
-				  DecryptHandle *decryptHandle, 
-				  int            fd, 
-				  off64_t        offset, 
-				  off64_t        length) 
+				  __attribute__((unused)) DecryptHandle *decryptHandle, 
+				  __attribute__((unused)) int            fd, 
+				  __attribute__((unused)) off64_t        offset, 
+				  __attribute__((unused)) off64_t        length) 
 {
   ALOGV("NvDrmPlugin::onOpenDecryptSession() - Enter : %d", uniqueId);
 
@@ -642,9 +654,9 @@ NvDrmPlugin::onOpenDecryptSession(int            uniqueId,
  * NvDrmPlugin::onOpenDecryptSession
  */
 SYM_EXPORT status_t 
-NvDrmPlugin::onOpenDecryptSession(      int            uniqueId, 
-				        DecryptHandle *decryptHandle, 
-					const char          *uri) 
+NvDrmPlugin::onOpenDecryptSession(      __attribute__((unused)) int            uniqueId, 
+				        __attribute__((unused)) DecryptHandle *decryptHandle, 
+					__attribute__((unused)) const char          *uri) 
 {
   return DRM_ERROR_CANNOT_HANDLE;
 }
@@ -678,9 +690,9 @@ NvDrmPlugin::onCloseDecryptSession(int            uniqueId,
  */
 SYM_EXPORT status_t 
 NvDrmPlugin::onInitializeDecryptUnit(      int            uniqueId, 
-				           DecryptHandle *decryptHandle,
-				           int            decryptUnitId, 
-					   const DrmBuffer     *headerInfo) 
+				           __attribute__((unused)) DecryptHandle *decryptHandle,
+				           __attribute__((unused)) int            decryptUnitId, 
+					   __attribute__((unused)) const DrmBuffer     *headerInfo) 
 {
   ALOGV("NvDrmPlugin::onInitializeDecryptUnit() - Enter : %d", uniqueId);
   return DRM_NO_ERROR;
@@ -691,11 +703,11 @@ NvDrmPlugin::onInitializeDecryptUnit(      int            uniqueId,
  */
 SYM_EXPORT status_t 
 NvDrmPlugin::onDecrypt(      int             uniqueId, 
-		             DecryptHandle  *decryptHandle,
-		             int             decryptUnitId, 
+		             __attribute__((unused)) DecryptHandle  *decryptHandle,
+		             __attribute__((unused)) int             decryptUnitId, 
 			     const DrmBuffer      *encBuffer, 
 		             DrmBuffer     **decBuffer, 
-		             DrmBuffer      *IV) 
+		             __attribute__((unused)) DrmBuffer      *IV) 
 {
   ALOGV("NvDrmPlugin::onDecrypt() - Enter : %d", uniqueId);
 
@@ -729,8 +741,8 @@ NvDrmPlugin::onDecrypt(      int             uniqueId,
  */
 SYM_EXPORT status_t 
 NvDrmPlugin::onFinalizeDecryptUnit(int            uniqueId, 
-				   DecryptHandle *decryptHandle, 
-				   int            decryptUnitId) 
+				   __attribute__((unused)) DecryptHandle *decryptHandle, 
+				   __attribute__((unused)) int            decryptUnitId) 
 {
   ALOGV("NvDrmPlugin::onFinalizeDecryptUnit() - Enter : %d", uniqueId);
   return DRM_NO_ERROR;
@@ -741,10 +753,10 @@ NvDrmPlugin::onFinalizeDecryptUnit(int            uniqueId,
  */
 SYM_EXPORT ssize_t 
 NvDrmPlugin::onPread(int            uniqueId, 
-		     DecryptHandle *decryptHandle,
-		     void          *buffer, 
-		     ssize_t        numBytes, 
-		     off64_t        offset) 
+		     __attribute__((unused)) DecryptHandle *decryptHandle,
+		     __attribute__((unused)) void          *buffer, 
+		     __attribute__((unused)) ssize_t        numBytes, 
+		     __attribute__((unused)) off64_t        offset) 
 {
   ALOGV("NvDrmPlugin::onPread() - Enter : %d", uniqueId);
   return 0;

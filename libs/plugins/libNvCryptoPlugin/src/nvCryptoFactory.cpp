@@ -111,9 +111,9 @@ NvCryptoFactory::isCryptoSchemeSupported(const uint8_t uuid[16]) const
  */
 extern "C" { extern CryptoPlugin* create(); }
 SYM_EXPORT status_t 
-NvCryptoFactory::createPlugin(const uint8_t        uuid[16], 
-			      const void          *data, 
-				    size_t         size,
+NvCryptoFactory::createPlugin(__attribute__((unused)) const uint8_t        uuid[16], 
+			      __attribute__((unused)) const void          *data, 
+			      __attribute__((unused)) 	    size_t         size,
 				    CryptoPlugin **plugin)
 {
   ALOGV("NvCryptoFactory::createPlugin() - Enter");
