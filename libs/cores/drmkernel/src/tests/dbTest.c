@@ -92,6 +92,9 @@ const uint8_t keyid1[AES_BLOCK_SIZE] = {
   /* KeyId     0x00 */  0x12, 0x1a, 0x0f, 0xca, 0x0f, 0x1b, 0x47, 0x5b, 
   /*           0x08 */  0x89, 0x10, 0x29, 0x7f, 0xa8, 0xe0, 0xa0, 0x7e
 };
+const uint8_t unprotectedKey1[AES_BLOCK_SIZE] = {
+  0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf
+};
 const uint8_t key1[AES_BLOCK_SIZE*2] = {
   /* Key       0x00 */  0x91, 0xa9, 0xba, 0xa6, 0xba, 0x28, 0xe5, 0x15, 
   /*           0x08 */  0x7f, 0x60, 0x23, 0xc7, 0x79, 0x53, 0x21, 0x16, 
@@ -119,6 +122,9 @@ const size_t right1_right_datalen = 26 + AES_BLOCK_SIZE*3 + SHA256_DIGEST_LENGTH
 const uint8_t keyid2[AES_BLOCK_SIZE] = {
   /* 0x18 KeyId     0x00 */  0x80, 0x9a, 0x82, 0xba, 0xec, 0x0e, 0x42, 0x54, 
   /* 0x20           0x08 */  0xbf, 0x43, 0x57, 0x3e, 0xed, 0x9e, 0xac, 0x02,
+};
+const uint8_t unprotectedKey2[AES_BLOCK_SIZE] = {
+  0x7f, 0x99, 0x06, 0x95, 0x78, 0xab, 0x4d, 0xae, 0x8d, 0x6c, 0xe2, 0x4c, 0xc3, 0x21, 0x02, 0x32
 };
 const uint8_t key2[AES_BLOCK_SIZE*2] = {
   /* 0x2A Key       0x00 */  0x62, 0x20, 0x97, 0x23, 0x6d, 0x4b, 0xad, 0xe2, 
@@ -232,14 +238,14 @@ int main()
 
   if (DrmKernel_getRightKey(keyid1, &key, &keylen) == NV_NO_ERROR)
     {
-      ok = memcmp(key, key1, keylen) == 0 && keylen == AES_BLOCK_SIZE*2;
+      ok = memcmp(key, unprotectedKey1, keylen) == 0 && keylen == AES_BLOCK_SIZE;
       printf("==> key for KeyId1 is: %s (OK expected) => %s: %s\n", bintobuf(outbuf, key, keylen), ok ? "OK" : "NOK", ok ? "PASSED": "FAILED");
       free (key);
     }
 
   if (DrmKernel_getRightKey(keyid2, &key, &keylen) == NV_NO_ERROR)
     {
-      ok = memcmp(key, key2, keylen) == 0 && keylen == AES_BLOCK_SIZE*2;
+      ok = memcmp(key, unprotectedKey2, keylen) == 0 && keylen == AES_BLOCK_SIZE;
       printf("==> key for KeyId2 is: %s (OK expected) => %s: %s\n", bintobuf(outbuf, key, keylen), ok ? "OK" : "NOK", ok ? "PASSED": "FAILED");
       free (key);
     }

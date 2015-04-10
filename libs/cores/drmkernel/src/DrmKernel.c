@@ -755,7 +755,6 @@ status_t DrmKernel_getRightKey(const uint8_t *xKeyId, uint8_t **ppxKey, size_t *
 	    {
 	      ALOGV("DrmKernel_getRightKey - Valid Right\n");
 	      
-	      int outsz;
 	      EVP_CIPHER_CTX ectx;
 
 	      *ppxKey = (uint8_t *)malloc(record._contentKeySize);
@@ -764,12 +763,11 @@ status_t DrmKernel_getRightKey(const uint8_t *xKeyId, uint8_t **ppxKey, size_t *
 		  ALOGE("DrmKernel_getRightKey - *ppxKey Allocation error !");
 		  goto do_the_free;
 		}
-	      *pxKeylen = record._contentKeySize;
 	      
 	      EVP_CIPHER_CTX_init(&ectx);
 	      EVP_DecryptInit_ex(&ectx, EVP_aes_128_cbc(), NULL, hmacKey, iv);
-	      EVP_DecryptUpdate(&ectx, *ppxKey, &outsz, record._contentKey, record._contentKeySize);
-	      EVP_DecryptFinal(&ectx, *ppxKey, &outsz);
+	      EVP_DecryptUpdate(&ectx, *ppxKey, (int *)pxKeylen, record._contentKey, record._contentKeySize);
+	      EVP_DecryptFinal(&ectx, *ppxKey, (int *)pxKeylen);
 
 	      status = NV_NO_ERROR;
 
