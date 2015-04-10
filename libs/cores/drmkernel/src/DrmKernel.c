@@ -730,41 +730,59 @@ status_t DrmKernel_getRightKey(const uint8_t *xKeyId, uint8_t **ppxKey, size_t *
 
   status_t status = NV_DRM_ERROR_UNKNOWN;
 
-  SecureRecord record;
-  record._key = NULL;
-  record._keyId = USTR(xKeyId);
-  record._contentKey = (unsigned char *) NULL;
-  record._contentKeySize = 0;
-  record._tag = (unsigned char *) NULL;
-  record._tagSize = 0;
-
-  if (!getRecord(&mDatabaseConnection, NULL, xKeyId, &record))
-    ALOGE(
-          "NvDrmPlugin::onGetRightKey() - unable to get right");
-  
-  else 
+  if (ppxKey && pxKeylen)
     {
-      if (!checkRecordCrypto(&record)) 
-	{
-	  ALOGV(
-		"DrmKernel_getRightKey - Invalid Right\n");
-	} 
+      SecureRecord record;
+      record._key = NULL;
+      record._keyId = USTR(xKeyId);
+      record._contentKey = (unsigned char *) NULL;
+      record._contentKeySize = 0;
+      record._tag = (unsigned char *) NULL;
+      record._tagSize = 0;
+      
+      if (!getRecord(&mDatabaseConnection, NULL, xKeyId, &record))
+	ALOGE(
+	      "NvDrmPlugin::onGetRightKey() - unable to get right");
+      
       else 
 	{
-	  ALOGV("DrmKernel_getRightKey - Valid Right\n");
+	  if (!checkRecordCrypto(&record)) 
+	    {
+	      ALOGV(
+		    "DrmKernel_getRightKey - Invalid Right\n");
+	    } 
+	  else 
+	    {
+	      ALOGV("DrmKernel_getRightKey - Valid Right\n");
+	      
+	      int outsz;
+	      EVP_CIPHER_CTX ectx;
 
-	  *ppxKey = (uint8_t *)malloc(record._contentKeySize);
-	  *pxKeylen = record._contentKeySize;
-	  memcpy(*ppxKey, record._contentKey, record._contentKeySize);
+	      *ppxKey = (uint8_t *)malloc(record._contentKeySize);
+	      if (!*ppxKey)
+		{
+		  ALOGE("DrmKernel_getRightKey - *ppxKey Allocation error !");
+		  goto do_the_free;
+		}
+	      *pxKeylen = record._contentKeySize;
+	      
+	      EVP_CIPHER_CTX_init(&ectx);
+	      EVP_DecryptInit_ex(&ectx, EVP_aes_128_cbc(), NULL, hmacKey, iv);
+	      EVP_DecryptUpdate(&ectx, *ppxKey, &outsz, record._contentKey, record._contentKeySize);
+	      EVP_DecryptFinal(&ectx, *ppxKey, &outsz);
 
-	  status = NV_NO_ERROR;
+	      status = NV_NO_ERROR;
 
-	  free((void *)record._key);
-	  free((void *)record._keyId);
-	  free((void *)record._contentKey);
-	  free((void *)record._tag);
+	    do_the_free:
+	      free((void *)record._key);
+	      free((void *)record._keyId);
+	      free((void *)record._contentKey);
+	      free((void *)record._tag);
+	    }
 	}
     }
+  else
+    ALOGE("DrmKernel_getRightKey - Invalid parameters");
 
   ALOGV("DrmKernel_getRightKey - Exit (%d)\n", status);
   return status;  

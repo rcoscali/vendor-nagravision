@@ -1,0 +1,11 @@
+Nomenclature:
+
+An aspire asset is named in this doc and in the code comments as:
+AA<n>[.<m>]
+
+First digit is the main asset number. Second optional digit is used for numbering secondary assets, associated to a main asset.
+For example Content Key is the main asset AA1. The private protection key used for unwrapping KC is the secondary asset AA1.1.
+
+2.1 Content Key
+
+The content key is obtained from the right. Right transports a protected content key. This key is unprotected just before usage in CryptoKernel_NvCryptoPlugin_decrypt.
