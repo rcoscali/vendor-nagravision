@@ -51,12 +51,17 @@ static NvDatabaseConnection mDatabaseConnection;
 static int mDatabaseConnectionInitialized = 0;
 
 /* Rights confidentiality & authentication keys */
-const uint8_t hmacKey[AES_BLOCK_SIZE] = {
+const uint8_t zeroKey[AES_BLOCK_SIZE] = {
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+const uint8_t macKey[AES_BLOCK_SIZE] = {
   0xB7, 0x01, 0x02, 0x03, 0x10, 0x11, 0x12, 0x13, 
   0xA0, 0xB1, 0xC2, 0xD3, 0xE0, 0xF1, 0xE2, 0xF3
 };
-const uint8_t iv[AES_BLOCK_SIZE] = {
-  0xA9, '2', '0', '1', '5', 'n', 'a', 'g', 'r', 'a', 'v', 'i', 's', 'i', 'o', 'n'
+const uint8_t macIv[AES_BLOCK_SIZE] = {
+  0xa9, 0x32, 0x30, 0x31, 0x35, 0x6e, 0x61, 0x67, 
+  0x72, 0x61, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e
 };
 
 
@@ -73,11 +78,12 @@ static void printBuf(const char *msg, const uint8_t *buf, const size_t len)
   unsigned int i = 0;
 
   bzero(outbuf, 1024);
-  for (i = 0; i < NVMIN(len, 1024); i++)
-    {
-      uint8_t v = buf[i];
-      sprintf(&outbuf[i*2], "%02x ", v);
-    }
+  if (buf)
+    for (i = 0; i < NVMIN(len, 1024); i++)
+      {
+	uint8_t v = buf[i];
+	sprintf(&outbuf[i*2], "%02x ", v);
+      }
   ALOGV("%s = %s", msg, outbuf);
 }
 #else
@@ -136,7 +142,7 @@ static int checkRecordCrypto(SecureRecord* pxRecord) {
       SHA256_Final(hash, &sha256);
       
       EVP_CIPHER_CTX_init(&ectx);
-      EVP_EncryptInit_ex(&ectx, EVP_aes_128_cbc(), NULL, hmacKey, iv);
+      EVP_EncryptInit_ex(&ectx, EVP_aes_128_cbc(), NULL, macKey, macIv);
       EVP_EncryptUpdate(&ectx, tag, &outsz, hash, SHA256_DIGEST_LENGTH);
 
       /* Don't need to do the final step... 
@@ -147,9 +153,11 @@ static int checkRecordCrypto(SecureRecord* pxRecord) {
 	ret = 1;
       else
 	ret = 0;
+
+      EVP_EncryptInit_ex(&ectx, EVP_aes_128_cbc(), NULL, zeroKey, macIv); // make rounds with zero key
     }
   
-  ALOGV("checkRecordCrypto - Exit (%d)\n", ret);
+  ALOGV("checkRecordCrypto - Exit (%d)", ret);
   return ret;
 }
 
@@ -158,7 +166,7 @@ extern "C"
 #endif
 static int insertRecord(NvDatabaseConnection* pxDatabaseConnection,
                         SecureRecord* pxRecord) {
-  ALOGV("insertRecord - Entry\n");
+  ALOGV("insertRecord - Entry");
   int ret = 0;
   
   if (pxRecord) 
@@ -168,7 +176,7 @@ static int insertRecord(NvDatabaseConnection* pxDatabaseConnection,
       // Check if record is valid
       if (checkRecordCrypto(pxRecord)) 
 	{
-	  ALOGV("*** Record integrity & authenticity is valid !\n");
+	  ALOGV("*** Record integrity & authenticity is valid !");
 	  
 	  if (pxDatabaseConnection) 
 	    {
@@ -194,18 +202,18 @@ static int insertRecord(NvDatabaseConnection* pxDatabaseConnection,
 	}
       else
 	{
-	  ALOGV("*** Record integrity & authenticity is NOT valid !\n");
+	  ALOGV("*** Record integrity & authenticity is NOT valid !");
 	}
     }
   
-  ALOGV("insertRecord - Exit (%d)\n", ret);
+  ALOGV("insertRecord - Exit (%d)", ret);
   return ret;
 }
 
 static int insertPersoRecord(NvDatabaseConnection* pxDatabaseConnection,
 			     SecureRecord* pxRecord) 
 {
-  ALOGV("insertPersoRecord - Entry\n");
+  ALOGV("insertPersoRecord - Entry");
   int ret = 0;
   
   if (pxRecord && !strncmp(pxRecord->_key, "PERSO", 5)) 
@@ -235,10 +243,10 @@ static int insertPersoRecord(NvDatabaseConnection* pxDatabaseConnection,
     }
   else
     {
-      ALOGV("*** Record integrity & authenticity is NOT valid !\n");
+      ALOGV("*** Record integrity & authenticity is NOT valid !");
     }
   
-  ALOGV("insertPersoRecord - Exit (%d)\n", ret);
+  ALOGV("insertPersoRecord - Exit (%d)", ret);
   return ret;
 }
 
@@ -250,7 +258,7 @@ extern "C"
 #endif
 static int getRecord(NvDatabaseConnection* pxDatabaseConnection,
                      const char* pxKey, const uint8_t *pxKeyId, SecureRecord* pxRecord) {
-  ALOGV("getRecord - Entry\n");
+  ALOGV("getRecord - Entry");
   int ret = 0;
 
 
@@ -283,10 +291,10 @@ static int getRecord(NvDatabaseConnection* pxDatabaseConnection,
     }
   else
     {
-      ALOGV("getRecord - bad db connection (%p) secure rec (%p)\n",pxDatabaseConnection, pxRecord );
+      ALOGV("getRecord - bad db connection (%p) secure rec (%p)",pxDatabaseConnection, pxRecord );
     }
         
-  ALOGV("getRecord - Exit (%d)\n", ret);
+  ALOGV("getRecord - Exit (%d)", ret);
   return ret;
 }
 
@@ -345,7 +353,7 @@ DrmInfo_AttributePut(struct NV_DrmInfo_st *drmInfo,
                      const char *key,
                      const char *val) 
 {
-  ALOGV("DrmInfo_AttributePut - Entry (%s - %s)\n", key, val);
+  ALOGV("DrmInfo_AttributePut - Entry (%s - %s)", key, val);
 
   unsigned int sz = 0;
 
@@ -382,7 +390,7 @@ DrmInfo_AttributePut(struct NV_DrmInfo_st *drmInfo,
   attr->value = (char *) strdup(val);
   NV_ASSERT("on DrmInfo:PutAttr->next(val)", attr->value);
 
-  ALOGV("DrmInfo_AttributePut - Exit\n");
+  ALOGV("DrmInfo_AttributePut - Exit");
 }
 
 /*
@@ -391,10 +399,10 @@ DrmInfo_AttributePut(struct NV_DrmInfo_st *drmInfo,
 struct NV_DrmConstraints_st*
 DrmKernel_NvDrmPlugin_onGetConstraints(int uniqueId, const char *path,
                                        int action) {
-  ALOGV("DrmKernel_NvDrmPlugin_onGetConstraints - Entry\n");
-  ALOGV("uniqueId = %d\n", uniqueId);
-  ALOGV("path = '%s'\n", path);
-  ALOGV("action = %d\n", action);
+  ALOGV("DrmKernel_NvDrmPlugin_onGetConstraints - Entry");
+  ALOGV("uniqueId = %d", uniqueId);
+  ALOGV("path = '%s'", path);
+  ALOGV("action = %d", action);
 
   struct NV_DrmConstraints_st *tmp = (struct NV_DrmConstraints_st *) malloc(
                                                                             sizeof(struct NV_DrmConstraints_st));
@@ -404,7 +412,7 @@ DrmKernel_NvDrmPlugin_onGetConstraints(int uniqueId, const char *path,
     tmp->value = strdup("dummy_available_time");
   }
 
-  ALOGV("DrmKernel_NvDrmPlugin_onGetConstraints - Exit (%p)\n", tmp);
+  ALOGV("DrmKernel_NvDrmPlugin_onGetConstraints - Exit (%p)", tmp);
   return tmp;
 }
 
@@ -414,8 +422,8 @@ DrmKernel_NvDrmPlugin_onGetConstraints(int uniqueId, const char *path,
 struct NV_DrmInfoStatus_st *
 DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId,
                                        const struct NV_DrmInfo_st *drmInfo) {
-  ALOGV("DrmKernel_NvDrmPlugin_onProcessDrmInfo - Entry\n");
-  ALOGV("uniqueId = %d\n", uniqueId);
+  ALOGV("DrmKernel_NvDrmPlugin_onProcessDrmInfo - Entry");
+  ALOGV("uniqueId = %d", uniqueId);
 
   struct NV_DrmInfoStatus_st *drmInfoStatus =
     (struct NV_DrmInfoStatus_st *) NULL;
@@ -424,17 +432,17 @@ DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId,
 
     case NV_DrmInfoRequest_TYPE_REGISTRATION_INFO: {
       ALOGV(
-            "DrmKernel_NvDrmPlugin_onProcessDrmInfo - TYPE_REGISTRATION_INFO\n");
+            "DrmKernel_NvDrmPlugin_onProcessDrmInfo - TYPE_REGISTRATION_INFO");
 
       struct NV_DrmBuffer_st *emptyBuffer =
         (struct NV_DrmBuffer_st *) malloc(
                                           sizeof(struct NV_DrmBuffer_st));
-      NV_ASSERT("Buffer allocation error\n", emptyBuffer);
+      NV_ASSERT("Buffer allocation error", emptyBuffer);
       bzero(emptyBuffer, sizeof(struct NV_DrmBuffer_st));
 
       drmInfoStatus = (struct NV_DrmInfoStatus_st *) malloc(
                                                             sizeof(struct NV_DrmInfoStatus_st));
-      NV_ASSERT("DrmInfoStatus allocation error\n", drmInfoStatus);
+      NV_ASSERT("DrmInfoStatus allocation error", drmInfoStatus);
       bzero(drmInfoStatus, sizeof(struct NV_DrmInfoStatus_st));
 
       SecureRecord record;
@@ -457,17 +465,17 @@ DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId,
 
     case NV_DrmInfoRequest_TYPE_UNREGISTRATION_INFO: {
       ALOGV(
-            "DrmKernel_NvDrmPlugin_onProcessDrmInfo - TYPE_UNREGISTRATION_INFO\n");
+            "DrmKernel_NvDrmPlugin_onProcessDrmInfo - TYPE_UNREGISTRATION_INFO");
 
       struct NV_DrmBuffer_st *emptyBuffer =
         (struct NV_DrmBuffer_st *) malloc(
                                           sizeof(struct NV_DrmBuffer_st));
-      NV_ASSERT("Buffer allocation error\n", emptyBuffer);
+      NV_ASSERT("Buffer allocation error", emptyBuffer);
       bzero(emptyBuffer, sizeof(struct NV_DrmBuffer_st));
 
       drmInfoStatus = (struct NV_DrmInfoStatus_st *) malloc(
                                                             sizeof(struct NV_DrmInfoStatus_st));
-      NV_ASSERT("DrmInfoStatus allocation error\n", drmInfoStatus);
+      NV_ASSERT("DrmInfoStatus allocation error", drmInfoStatus);
       bzero(drmInfoStatus, sizeof(struct NV_DrmInfoStatus_st));
 
       drmInfoStatus->statusCode = NV_DrmInfoStatus_STATUS_OK;
@@ -481,20 +489,20 @@ DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId,
 
     case NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_INFO: {
       ALOGV(
-            "DrmKernel_NvDrmPlugin_onProcessDrmInfo - TYPE_RIGHTS_ACQUISITION_INFO\n");
+            "DrmKernel_NvDrmPlugin_onProcessDrmInfo - TYPE_RIGHTS_ACQUISITION_INFO");
 
       struct NV_DrmBuffer_st *buffer = (struct NV_DrmBuffer_st *) malloc(
                                                                          sizeof(struct NV_DrmBuffer_st));
-      NV_ASSERT("Buffer allocation error\n", buffer);
+      NV_ASSERT("Buffer allocation error", buffer);
       bzero(buffer, sizeof(struct NV_DrmBuffer_st));
       buffer->length = strlen("dummy_license_string");
       buffer->data = (char *) malloc(buffer->length);
-      NV_ASSERT("Buffer data allocation error\n", buffer->data);
+      NV_ASSERT("Buffer data allocation error", buffer->data);
       memcpy(buffer->data, "dummy_license_string", buffer->length);
 
       drmInfoStatus = (struct NV_DrmInfoStatus_st *) malloc(
                                                             sizeof(struct NV_DrmInfoStatus_st));
-      NV_ASSERT("DrmInfoStatus allocation error\n", drmInfoStatus);
+      NV_ASSERT("DrmInfoStatus allocation error", drmInfoStatus);
       bzero(drmInfoStatus, sizeof(struct NV_DrmInfoStatus_st));
 
       drmInfoStatus->statusCode = NV_DrmInfoStatus_STATUS_OK;
@@ -508,20 +516,20 @@ DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId,
 
     case NV_DrmInfoRequest_TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO: {
       ALOGV(
-            "DrmKernel_NvDrmPlugin_onProcessDrmInfo - TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO\n");
+            "DrmKernel_NvDrmPlugin_onProcessDrmInfo - TYPE_RIGHTS_ACQUISITION_PROGRESS_INFO");
 
       struct NV_DrmBuffer_st *buffer = (struct NV_DrmBuffer_st *) malloc(
                                                                          sizeof(struct NV_DrmBuffer_st));
-      NV_ASSERT("Buffer allocation error\n", buffer);
+      NV_ASSERT("Buffer allocation error", buffer);
       bzero(buffer, sizeof(struct NV_DrmBuffer_st));
       buffer->length = strlen("dummy_license_string");
       buffer->data = (char *) malloc(buffer->length);
-      NV_ASSERT("Buffer data allocation error\n", buffer->data);
+      NV_ASSERT("Buffer data allocation error", buffer->data);
       memcpy(buffer->data, "dummy_license_string", buffer->length);
 
       drmInfoStatus = (struct NV_DrmInfoStatus_st *) malloc(
                                                             sizeof(struct NV_DrmInfoStatus_st));
-      NV_ASSERT("DrmInfoStatus allocation error\n", drmInfoStatus);
+      NV_ASSERT("DrmInfoStatus allocation error", drmInfoStatus);
       bzero(drmInfoStatus, sizeof(struct NV_DrmInfoStatus_st));
 
       drmInfoStatus->statusCode = NV_DrmInfoStatus_STATUS_OK;
@@ -535,7 +543,7 @@ DrmKernel_NvDrmPlugin_onProcessDrmInfo(int uniqueId,
     }
   }
 
-  ALOGV("DrmKernel_NvDrmPlugin_onProcessDrmInfo - Exit (%p)\n",
+  ALOGV("DrmKernel_NvDrmPlugin_onProcessDrmInfo - Exit (%p)",
         drmInfoStatus);
   return drmInfoStatus;
 }
@@ -547,10 +555,10 @@ status_t DrmKernel_NvDrmPlugin_onSaveRights(int uniqueId,
                                             const struct NV_DrmRights_st *drmRights, const char *rightsPath,
                                             const char *contentId) 
 {
-  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - Entry\n");
-  ALOGV("uniqueId = %d\n", uniqueId);
-  ALOGV("rightsPath = '%s'\n", rightsPath);
-  ALOGV("contentId = '%s'\n", contentId);
+  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - Entry");
+  ALOGV("uniqueId = %d", uniqueId);
+  ALOGV("rightsPath = '%s'", rightsPath);
+  ALOGV("contentId = '%s'", contentId);
 
   status_t retVal = NV_DRM_ERROR_UNKNOWN;
   SecureRecord record;
@@ -583,9 +591,9 @@ status_t DrmKernel_NvDrmPlugin_onSaveRights(int uniqueId,
   ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - index = %d", (dataptr - (uint8_t *)drmRights->data->data));
   ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - tag size = %d", record._tagSize);
 
-  ALOGV("record.key = %s\n", record._key);
-  ALOGV("record.contentKeySize = %d\n", record._contentKeySize);
-  ALOGV("record.tagSize = %d\n", record._tagSize);
+  ALOGV("record.key = %s", record._key);
+  ALOGV("record.contentKeySize = %d", record._contentKeySize);
+  ALOGV("record.tagSize = %d", record._tagSize);
 
       
   if (insertRecord(&mDatabaseConnection, &record)) 
@@ -596,7 +604,7 @@ status_t DrmKernel_NvDrmPlugin_onSaveRights(int uniqueId,
   else
     ALOGE("DrmKernel_NvDrmPlugin_onSaveRights() - Unable to save rights");
   
-  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - Exit (%d)\n", retVal);
+  ALOGV("DrmKernel_NvDrmPlugin_onSaveRights - Exit (%d)", retVal);
   return retVal;
 }
 
@@ -606,13 +614,13 @@ status_t DrmKernel_NvDrmPlugin_onSaveRights(int uniqueId,
 struct NV_DrmInfo_st *
 DrmKernel_NvDrmPlugin_onAcquireDrmInfo(__attribute__((unused)) int uniqueId,
                                        const struct NV_DrmInfoRequest_st *drmInfoRequest) {
-  ALOGV("DrmKernel_NvDrmPlugin_onAcquireDrmInfo - Entry\n");
+  ALOGV("DrmKernel_NvDrmPlugin_onAcquireDrmInfo - Entry");
 
   struct NV_DrmInfo_st *drmInfo = (struct NV_DrmInfo_st *) NULL;
 
   if (drmInfoRequest != (struct NV_DrmInfoRequest_st *) NULL) {
-    ALOGV("drmInfoRequest->infoType: %d\n", drmInfoRequest->infoType);
-    ALOGV("drmInfoRequest->mimeType: '%s'\n", drmInfoRequest->mimeType);
+    ALOGV("drmInfoRequest->infoType: %d", drmInfoRequest->infoType);
+    ALOGV("drmInfoRequest->mimeType: '%s'", drmInfoRequest->mimeType);
 
     drmInfo = (struct NV_DrmInfo_st *) malloc(sizeof(struct NV_DrmInfo_st));
     NV_ASSERT("on DrmInfo", drmInfo);
@@ -625,7 +633,7 @@ DrmKernel_NvDrmPlugin_onAcquireDrmInfo(__attribute__((unused)) int uniqueId,
 
     struct NV_DrmBuffer_st *drmBuffer = (struct NV_DrmBuffer_st *) malloc(
                                                                           sizeof(struct NV_DrmBuffer_st));
-    NV_ASSERT("Buffer allocation error\n", drmBuffer);
+    NV_ASSERT("Buffer allocation error", drmBuffer);
     bzero(drmBuffer, sizeof(struct NV_DrmBuffer_st));
     drmBuffer->data = (char *) strdup("Nagravision");
     drmBuffer->length = strlen("Nagravision");
@@ -641,7 +649,7 @@ DrmKernel_NvDrmPlugin_onAcquireDrmInfo(__attribute__((unused)) int uniqueId,
       rec._tag = (unsigned char *) NULL;
       rec._tagSize = 0;
 
-      ALOGV("Get perso record ...\n");
+      ALOGV("Get perso record ...");
       if (getRecord(&mDatabaseConnection, "PERSO", NULL, &rec)) {
         DrmInfo_AttributePut(drmInfo, "PERSO", "yes");
         DrmInfo_AttributePut(drmInfo, "UNIQUE_ID", (const char *)rec._tag);
@@ -668,9 +676,9 @@ DrmKernel_NvDrmPlugin_onAcquireDrmInfo(__attribute__((unused)) int uniqueId,
     }
   } else
     ALOGE(
-          "DrmKernel_onAcquireDrmInfo() - Invalid NULL drmInfoRequest param\n");
+          "DrmKernel_onAcquireDrmInfo() - Invalid NULL drmInfoRequest param");
 
-  ALOGE("DrmKernel_onAcquireDrmInfo() - exit (%p)\n", drmInfo);
+  ALOGE("DrmKernel_onAcquireDrmInfo() - exit (%p)", drmInfo);
   return drmInfo;
 }
 
@@ -682,7 +690,7 @@ DrmKernel_NvDrmPlugin_onCheckRightsStatus(__attribute__((unused)) int uniqueId,
                                           const char *contentId,
                                           __attribute__((unused)) int action) 
 {
-  ALOGV("DrmKernel_NvDrmPlugin_onCheckRightsStatus - Entry\n");
+  ALOGV("DrmKernel_NvDrmPlugin_onCheckRightsStatus - Entry");
 
   int rightsStatus = NV_RightsStatus_RIGHTS_INVALID;
   SecureRecord record;
@@ -703,12 +711,12 @@ DrmKernel_NvDrmPlugin_onCheckRightsStatus(__attribute__((unused)) int uniqueId,
       if (!checkRecordCrypto(&record)) 
 	{
 	  ALOGV(
-		"DrmKernel_NvDrmPlugin_onCheckRightsStatus - Invalid Rights\n");
+		"DrmKernel_NvDrmPlugin_onCheckRightsStatus - Invalid Rights");
 	} 
       else 
 	{
 	  rightsStatus = NV_RightsStatus_RIGHTS_VALID;
-	  ALOGV("DrmKernel_NvDrmPlugin_onCheckRightsStatus - Valid Right for content '%s'\n", contentId);
+	  ALOGV("DrmKernel_NvDrmPlugin_onCheckRightsStatus - Valid Right for content '%s'", contentId);
 	  free((void *)record._key);
 	  free((void *)record._keyId);
 	  free((void *)record._contentKey);
@@ -716,7 +724,7 @@ DrmKernel_NvDrmPlugin_onCheckRightsStatus(__attribute__((unused)) int uniqueId,
 	}
     }
 
-  ALOGV("DrmKernel_NvDrmPlugin_onCheckRightsStatus - Exit (%d)\n", rightsStatus);
+  ALOGV("DrmKernel_NvDrmPlugin_onCheckRightsStatus - Exit (%d)", rightsStatus);
   return rightsStatus;
 }
 
@@ -726,7 +734,7 @@ extern "C"
 __attribute__ ((visibility ("default"))) 
 status_t DrmKernel_getRightKey(const uint8_t *xKeyId, uint8_t **ppxKey, size_t *pxKeylen)
 {
-  ALOGV("DrmKernel_getRightKey - Entry\n");
+  ALOGV("DrmKernel_getRightKey - Entry");
 
   status_t status = NV_DRM_ERROR_UNKNOWN;
 
@@ -739,6 +747,7 @@ status_t DrmKernel_getRightKey(const uint8_t *xKeyId, uint8_t **ppxKey, size_t *
       record._contentKeySize = 0;
       record._tag = (unsigned char *) NULL;
       record._tagSize = 0;
+      *pxKeylen = 0;
       
       if (!getRecord(&mDatabaseConnection, NULL, xKeyId, &record))
 	ALOGE(
@@ -749,13 +758,14 @@ status_t DrmKernel_getRightKey(const uint8_t *xKeyId, uint8_t **ppxKey, size_t *
 	  if (!checkRecordCrypto(&record)) 
 	    {
 	      ALOGV(
-		    "DrmKernel_getRightKey - Invalid Right\n");
+		    "DrmKernel_getRightKey - Invalid Right");
 	    } 
 	  else 
 	    {
-	      ALOGV("DrmKernel_getRightKey - Valid Right\n");
+	      ALOGV("DrmKernel_getRightKey - Valid Right");
 	      
 	      EVP_CIPHER_CTX ectx;
+	      int outsz;
 
 	      *ppxKey = (uint8_t *)malloc(record._contentKeySize);
 	      if (!*ppxKey)
@@ -765,9 +775,17 @@ status_t DrmKernel_getRightKey(const uint8_t *xKeyId, uint8_t **ppxKey, size_t *
 		}
 	      
 	      EVP_CIPHER_CTX_init(&ectx);
-	      EVP_DecryptInit_ex(&ectx, EVP_aes_128_cbc(), NULL, hmacKey, iv);
-	      EVP_DecryptUpdate(&ectx, *ppxKey, (int *)pxKeylen, record._contentKey, record._contentKeySize);
-	      EVP_DecryptFinal(&ectx, *ppxKey, (int *)pxKeylen);
+	      // AA1.1: load secret key (for sake of simplicity we use the macKey)
+	      EVP_DecryptInit_ex(&ectx, EVP_aes_128_cbc(), NULL, macKey, macIv);
+	      // AA1.3: unprotect KC
+	      EVP_DecryptUpdate(&ectx, *ppxKey, &outsz, record._contentKey, record._contentKeySize);
+	      *pxKeylen = outsz;
+	      EVP_DecryptFinal(&ectx, *ppxKey, &outsz);
+	      if (outsz)
+		*pxKeylen += outsz;
+	      EVP_EncryptInit_ex(&ectx, EVP_aes_128_cbc(), NULL, zeroKey, macIv); // make rounds with zero'ed key
+
+	      ALOGV("DrmKernel_getRightKey - keylen = %d", *pxKeylen);
 
 	      status = NV_NO_ERROR;
 
@@ -782,6 +800,6 @@ status_t DrmKernel_getRightKey(const uint8_t *xKeyId, uint8_t **ppxKey, size_t *
   else
     ALOGE("DrmKernel_getRightKey - Invalid parameters");
 
-  ALOGV("DrmKernel_getRightKey - Exit (%d)\n", status);
+  ALOGV("DrmKernel_getRightKey - Exit (%d)", status);
   return status;  
 }

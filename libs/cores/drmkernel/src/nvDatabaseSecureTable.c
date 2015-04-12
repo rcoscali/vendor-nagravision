@@ -100,7 +100,7 @@ int insertSecureRecord(sqlite3* pxDatabase, SecureRecord *pxRecord) {
     // is an error.
 
     // key
-    rc = sqlite3_bind_text(pStmt, 1, pxRecord->_key, -1, SQLITE_TRANSIENT);
+    rc = sqlite3_bind_text(pStmt, 1, pxRecord->_key, strlen(pxRecord->_key), SQLITE_TRANSIENT);
     if (rc != SQLITE_OK) {
       ALOGV(
             "nvDatabaseSecureTable::insertSecureRecord() - bind key failed");
@@ -255,8 +255,10 @@ int selectSecureRecord(sqlite3* pxDatabase, const char* xKey, const uint8_t *xKe
       break;
     }
     size_t keylen = sqlite3_column_bytes(pStmt, index);
+    ALOGV("secureSelect - keylen = %d", keylen);
     pxRecord->_key = (char *) malloc(keylen+1);
-    strncpy((char *)pxRecord->_key, (const char *)sqlite3_column_text(pStmt, index), keylen);
+    strcpy((char *)pxRecord->_key, (const char *)sqlite3_column_text(pStmt, index));
+    ALOGV("secureSelect - key = %s", pxRecord->_key);
 
     index = getFieldIndex(pStmt, "KID");
     if (index < 0) {

@@ -1,25 +1,50 @@
+TESTS= checkRecordCrypto onSaveRights onCheckRightsStatus dbTest
 
-all: checkRecordCrypto onSaveRights onCheckRightsStatus dbTest
 
-checkRecordCrypto: checkRecordCrypto.c ../DrmKernel.c
-	gcc -g -w -DDRM_HOST_KERNEL_TEST=1 -std=c99 -I../../include -I../../../../../../../frameworks/native/include -I../../../../../../../system/core/include $< -o $@ -lcrypto
+CFLAGS= -m64 -g -w -DDRM_HOST_KERNEL_TEST=1 -std=c99 -I/usr/include/x86_64-linux-gnu -I../../include -I../../../../../../../frameworks/native/include -I../../../../../../../system/core/include 
+LDFLAGS= -m64 -g -w -std=c99 
 
-onSaveRights: onSaveRights.c ../DrmKernel.c
-	gcc -g -w -DDRM_HOST_KERNEL_TEST=1 -std=c99 -I../../include -I../../../../../../../frameworks/native/include -I../../../../../../../system/core/include $< -o $@ -lcrypto
+CHECK_RECORD_CRYPTO_OBJS:= checkRecordCrypto.o
+ON_SAVE_RIGHTS_OBJS:= onSaveRights.o
+ON_CHECK_RIGHTS_STATUS_OBJS:= onCheckRightsStatus.o
+DBTEST_OBJS:= dbTest.o nvDatabase.o nvDatabaseSecureTable.o DrmKernel.o
 
-onCheckRightsStatus: onCheckRightsStatus.c ../DrmKernel.c
-	gcc -g -w -DDRM_HOST_KERNEL_TEST=1 -std=c99 -I../../include -I../../../../../../../frameworks/native/include -I../../../../../../../system/core/include $< -o $@ -lcrypto
+all: $(TESTS)
 
-dbTest: dbTest.c ../nvDatabase.c ../nvDatabaseSecureTable.c ../DrmKernel.c
-	gcc -g -w -DDRM_HOST_KERNEL_TEST=1 -std=c99 -I../../include -I../../../../../../../frameworks/native/include -I../../../../../../../system/core/include -c ../DrmKernel.c -o DrmKernel.o 
-	gcc -g -w -DDRM_HOST_KERNEL_TEST=1 -std=c99 -I../../include -I../../../../../../../frameworks/native/include -I../../../../../../../system/core/include -c ../nvDatabase.c -o nvDatabase.o 
-	gcc -g -w -DDRM_HOST_KERNEL_TEST=1 -std=c99 -I../../include -I../../../../../../../frameworks/native/include -I../../../../../../../system/core/include -c ../nvDatabaseSecureTable.c -o nvDatabaseSecureTable.o 
-	gcc -g -w -DDRM_HOST_KERNEL_TEST=1 -std=c99 -I../../include -I../../../../../../../frameworks/native/include -I../../../../../../../system/core/include dbTest.c DrmKernel.o nvDatabase.o nvDatabaseSecureTable.o -o dbTest -lsqlite3 -lcrypto
+.PHONY: all clean tests
+
+%.o: %.c
+	gcc $(CFLAGS) -c $< -o $@
+
+%.o: ../%.c
+	gcc $(CFLAGS) -c $< -o $@
+
+checkRecordCrypto: $(CHECK_RECORD_CRYPTO_OBJS)
+	gcc $(LDFLAGS) $(CHECK_RECORD_CRYPTO_OBJS) -o $@ -lcrypto
+
+onSaveRights: $(ON_SAVE_RIGHTS_OBJS)
+	gcc $(LDFLAGS) $(ON_SAVE_RIGHTS_OBJS) -o $@ -lcrypto
+
+onCheckRightsStatus: $(ON_CHECK_RIGHTS_STATUS_OBJS)
+	gcc $(LDFLAGS) $(ON_CHECK_RIGHTS_STATUS_OBJS) -o $@ -lcrypto
+
+dbTest: $(DBTEST_OBJS)
+	gcc $(LDFLAGS) $(DBTEST_OBJS) -o dbTest -lsqlite3 -lcrypto
 
 clean:
-	rm -f checkRecordCrypto onSaveRights onCheckRightsStatus dbTest *.o *.db
+	/bin/rm -f $(TESTS) *.o *.db
+	/bin/rm -f *~
 
-tests: checkRecordCrypto onSaveRights onCheckRightsStatus
+tests: $(TESTS)
 	./checkRecordCrypto
 	./onSaveRights
 	./onCheckRightsStatus
+	./dbTest
+
+checkRecordCrypto.o: checkRecordCrypto.c ../DrmKernel.c ../../include/DrmKernel.h ../../include/nvDatabase.h  ../../include/nvDatabaseSecureTable.h 
+onSaveRights.o: onSaveRights.c ../DrmKernel.c ../../include/DrmKernel.h ../../include/nvDatabase.h  ../../include/nvDatabaseSecureTable.h 
+onCheckRightsStatus.o: onCheckRightsStatus.c ../DrmKernel.c ../../include/DrmKernel.h ../../include/nvDatabase.h  ../../include/nvDatabaseSecureTable.h 
+dbTest.o: dbTest.c ../../include/DrmKernel.h 
+DrmKernel.o: ../DrmKernel.c ../../include/DrmKernel.h ../../include/nvDatabase.h  ../../include/nvDatabaseSecureTable.h 
+nvDatabase.o: ../nvDatabase.c ../../include/nvDatabase.h
+nvDatabaseSecureTable.o: ../nvDatabaseSecureTable.c ../../include/nvDatabaseSecureTable.h 

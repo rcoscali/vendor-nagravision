@@ -8,4 +8,100 @@ For example Content Key is the main asset AA1. The private protection key used f
 
 2.1 Content Key
 
-The content key is obtained from the right. Right transports a protected content key. This key is unprotected just before usage in CryptoKernel_NvCryptoPlugin_decrypt.
+The content key (AA1) is used in CryptoKernel.c function:
+        ssize_t CryptoKernel_NvCryptoPlugin_decrypt(__attribute__((unused)) char secure, 
+						    const uint8_t keyid[16], 
+						    const uint8_t iv[16], 
+						    const void *srcPtr, 
+						    const struct NV_SubSample_st *subSamples, 
+						   __attribute__((unused))  size_t numSubSamples, 
+						    void *dstPtr, 
+						    char **errorDetailMsg) (named here after Decrypt)
+
+The content key is obtained by Decrypt from the right through the DrmKernel.c function:
+	status_t DrmKernel_getRightKey(const uint8_t *xKeyId, uint8_t **ppxKey, size_t *pxKeylen) (named here after GetRightKey)
+
+The GetRightKey function loads the right for the keyId provided as parameter, check the right is valid (integrity) and, as the right 
+transports a protected content key, this key is unprotected just before going back in Decrypt. 
+The key used for unwrapping the content key is a secret key (AA2) that would have been gotten from individualization step (in a real drm).
+This later process is the Right Verification asset (AA3), and is described later.
+
+2.2 Right
+
+The right (AA2) allows to provide the subscriber a key bounded to a content. The right is provided to the Drm plugin by Java Application via
+the Android Drm Framework. 
+A right is:
+  ContentId (a C string for identifying the protected content)
+  KeyId (a 16 bytes value for identifying the key used to protect the content) 
+  ProtectedKeyLen (a 2 bytes value providing the length of protected key record)
+  ProtectedKey (a blob value containing the protected key)
+  IntegrityTag (a 32 bytes value being a MAC on previous value)
+All these values are stored in DB through the following flow:
+ - Java Application DrmAgent issues a android drm framework command providing the right
+ - Request is provided to the DrmPlugin through jni, binder and the drmserver
+   The following DrmPlugin method is called:
+
+       SYM_EXPORT status_t 
+       NvDrmPlugin::onSaveRights(int uniqueId,
+			  	 const DrmRights &drmRights, 
+				 const String8 &rightsPath,
+			  	 const String8 &contentPath) 
+
+   The right in itself (the previous structure) is available in the mdata field of the 
+   DrmRights object from libdrmframeworkcommon. This mData field is a buffer with a length.
+   The onSaveRights method of the plugin provides the right to the DrmKernel function:
+
+	status_t DrmKernel_NvDrmPlugin_onSaveRights(int uniqueId,
+	                                            const struct NV_DrmRights_st *drmRights, 
+						    const char *rightsPath,
+	                                            const char *contentId) (named here after OnSaveRights)
+
+   OnSaveRights method first parses the right, creates a record from it and then call 
+
+	static int insertRecord(NvDatabaseConnection* pxDatabaseConnection,
+	                        SecureRecord* pxRecord)
+
+   This method first check right authenticity by calling:  
+
+	static int checkRecordCrypto(SecureRecord* pxRecord)
+
+   that verify the mac tag on right data:
+
+        AES-128-CBC(SHA256(ContentId | KeyId | ProtectedKeyLen | ProtectedKey)) -> 32 bytes tag
+
+   Key used for authentication is the secret key AA8.
+   If the tag is not valid, the right is not persisted (AA2.x). Otherwise, right is persisted through
+   the nvDatabaseSecureTable.c function:
+
+	int insertSecureRecord(sqlite3* pxDatabase, SecureRecord *pxRecord)
+
+   This function first delete an already existing record with same index key (contentId), then
+   insert a new record. The underlying DB engine is sqlite.
+
+2.3 Right Verification
+
+Two right verification occurs: 
+ - the first is informative for the application, it is not an asset
+ - the second is at the content decryption stage, for each packet, this is the asset.  
+
+The later is implemented in the DrmKernel.c function:
+
+	status_t DrmKernel_getRightKey(const uint8_t *xKeyId, 
+		 		       uint8_t **ppxKey, 
+				       size_t *pxKeylen)
+
+and called from the CryptoKernel.c function:
+
+        ssize_t CryptoKernel_NvCryptoPlugin_decrypt(__attribute__((unused)) char secure, 
+						    const uint8_t keyid[16], 
+						    const uint8_t iv[16], 
+						    const void *srcPtr, 
+						    const struct NV_SubSample_st *subSamples, 
+						   __attribute__((unused))  size_t numSubSamples, 
+						    void *dstPtr, 
+						    char **errorDetailMsg) (named here after Decrypt)
+
+The right is retrieved through a keyId in the SQL database, loaded and its authenticity
+is verified. Once authenticated, the content key is unprotected and given back the caller
+that descramble content and erase it.
+

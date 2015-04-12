@@ -15,6 +15,7 @@
 #
 LOCAL_PATH:= $(call my-dir)
 
+## Library drmkernel
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:= \
@@ -39,6 +40,7 @@ LOCAL_SHARED_LIBRARIES := \
 
 include $(BUILD_STATIC_LIBRARY)
 
+## Target Test checkRecordCrypto 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES:= \
 	tests/checkRecordCrypto.c
@@ -56,6 +58,7 @@ LOCAL_SHARED_LIBRARIES := \
 
 include $(BUILD_EXECUTABLE)
 
+## Host Test checkRecordCrypto 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES:= \
 	tests/checkRecordCrypto.c
@@ -73,6 +76,7 @@ LOCAL_SHARED_LIBRARIES := \
 
 include $(BUILD_HOST_EXECUTABLE)
 
+## Target Test onSaveRights
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES:= \
 	tests/onSaveRights.c
@@ -90,6 +94,7 @@ LOCAL_SHARED_LIBRARIES := \
 
 include $(BUILD_EXECUTABLE)
 
+## Host Test onSaveRights
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES:= \
 	tests/onSaveRights.c
@@ -100,6 +105,42 @@ LOCAL_C_INCLUDES += \
 	$(TOP)/system/core/include \
 	$(LOCAL_PATH)/../include
 LOCAL_MODULE:= HostDrmKernelTest_onSaveRights
+LOCAL_MODULE_TAGS := optional
+LOCAL_CFLAGS := -DDRM_HOST_KERNEL_TEST=1 -fvisibility=hidden
+LOCAL_SHARED_LIBRARIES := \
+    libcrypto
+
+include $(BUILD_HOST_EXECUTABLE)
+
+## Target Test onCheckRightsStatus
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES:= \
+	tests/onCheckRightsStatus.c
+LOCAL_C_INCLUDES += \
+	$(TOP)/external/sqlite/dist \
+	$(TOP)/external/openssl/include \
+	$(TOP)/frameworks/native/include \
+	$(TOP)/system/core/include \
+	$(LOCAL_PATH)/../include
+LOCAL_MODULE:= DrmKernelTest_onCheckRightsStatus
+LOCAL_MODULE_TAGS := optional
+LOCAL_CFLAGS := -fvisibility=hidden
+LOCAL_SHARED_LIBRARIES := \
+    libcrypto
+
+include $(BUILD_EXECUTABLE)
+
+## Host Test onCheckRightsStatus
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES:= \
+	tests/onCheckRightsStatus.c
+LOCAL_C_INCLUDES += \
+	$(TOP)/external/sqlite/dist \
+	$(TOP)/external/openssl/include \
+	$(TOP)/frameworks/native/include \
+	$(TOP)/system/core/include \
+	$(LOCAL_PATH)/../include
+LOCAL_MODULE:= HostDrmKernelTest_onCheckRightsStatus
 LOCAL_MODULE_TAGS := optional
 LOCAL_CFLAGS := -DDRM_HOST_KERNEL_TEST=1 -fvisibility=hidden
 LOCAL_SHARED_LIBRARIES := \

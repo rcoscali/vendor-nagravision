@@ -33,34 +33,38 @@
        cohen@PC12316-LX:~$
 
 for generating a content right tag:
-   # echo -ne "contentId + <length> + <protectedKey>" | openssl sha256 -binary | openssl enc -nopad -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | od -A n -w32 -t x1
+   # echo -ne "contentId + keyId + <length> + <protectedKey>" | openssl sha256 -binary | openssl enc -nopad -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | od -A n -w32 -t x1
    ex.:
 
    Key and IV are the one defined in DrmKernel.c provided to openssl as hex bytes string
 
-   For the right 1 test vector
-     "A Title for a content 1" : \x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x31
+   For the right 1 test vector (note the \x00 at end of content id, it is a C string: need it at right decoding)
+     "A Title for a content 1" : \x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x31\x00
+     keyId:                      \x12\x1a\x0f\xca\x0f\x1b\x47\x5b\x89\x10\x29\x7f\xa8\xe0\xa0\x7e
      Length                      \x00\x20
      Protected Key #1            \x91\xa9\xba\xa6\xba\x28\xe5\x15\x7f\x60\x23\xc7\x79\x53\x21\x16\xc2\x97\x36\xe0\x6f\x3b\x73\x65\xd0\x81\x2a\x86\x0e\x4b\xf7\x10
 
-       cohen@PC12316-LX:~$ echo -ne "\x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x31\x00\x20\x91
+       cohen@PC12316-LX:~$ echo -ne "\x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x31\x00\x12\
+       > \x1a\x0f\xca\x0f\x1b\x47\x5b\x89\x10\x29\x7f\xa8\xe0\xa0\x7e\x00\x20\x91\
        > \xa9\xba\xa6\xba\x28\xe5\x15\x7f\x60\x23\xc7\x79\x53\x21\x16\xc2\x97\x36\xe0\x6f\x3b\x73\x65\xd0\x81\x2a\x86\x0e\x4b\xf7\x10" | \
        > openssl sha256 -binary | openssl enc -e -nopad -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | \
        > od -A n -w32 -t x1
-        76 6d 75 87 3c 25 14 28 68 42 b3 3e fd aa 57 dc 9c f9 fe dd 9d 65 db e7 5d 5a fc 10 fd 74 41 06
-       cohen@PC12316-LX:Nitrogen6X-imx_jb4.3_1.3_NV-ga$ 
+        74 35 40 1a 16 21 28 38 2d 3a ba 8d 11 b2 76 56 65 e6 14 de 79 e9 4e 86 a5 18 d1 47 f3 76 a4 b8
+       cohen@PC12316-LX:~$ 
 
-   For the right 2 test vector
-     "A Title for a content 2" : \x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x32
+   For the right 2 test vector (note the \x00 at end of content id, it is a C string: need it at right decoding)
+     "A Title for a content 2" : \x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x32\x00
+     keyId:                      \x80\x9a\x82\xba\xec\x0e\x42\x54\xbf\x43\x57\x3e\xed\x9e\xac\x02
      Length                      \x00\x20
      Protected Key #2            \x62\x20\x97\x23\x6d\x4b\xad\xe2\x12\x38\xa7\x70\xd2\x17\xe3\xc5\x7c\xcf\x27\xcc\x41\x36\x90\x06\xf0\x12\x8c\xdd\x29\x96\xe3\x96
 
-       cohen@PC12316-LX:~$ echo -ne "\x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x32\x00\x20\
+       cohen@PC12316-LX:~$ echo -ne "\x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x32\00\x80\
+       > \x9a\x82\xba\xec\x0e\x42\x54\xbf\x43\x57\x3e\xed\x9e\xac\x02\x00\x20\
        > \x62\x20\x97\x23\x6d\x4b\xad\xe2\x12\x38\xa7\x70\xd2\x17\xe3\xc5\x7c\xcf\x27\xcc\x41\x36\x90\x06\xf0\x12\x8c\xdd\x29\x96\xe3\x96" | \
        > openssl sha256 -binary | openssl enc -e -nopad -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | \
        > od -A n -w32 -t x1
-        cd 66 f7 b4 94 89 da 02 74 7b 3c ca d8 ec 4a 15 55 c2 ed 4d d7 9a 78 d3 49 98 7f 5c 47 11 56 e3
-       cohen@PC12316-LX:Nitrogen6X-imx_jb4.3_1.3_NV-ga$ 
+        50 42 e0 e5 ce 61 1e b7 a7 c6 66 a8 94 fd 02 85 81 f4 aa 6b b4 2b 94 57 7e 37 48 58 19 9b 2e b8
+       cohen@PC12316-LX:~$ 
 
  */
 
@@ -164,6 +168,7 @@ int selectSecureRecord(__attribute__((unused)) sqlite3* pxDatabase,
 
 int main()
 {
+  int retall;
   const char *contentId1 = "A Title for a content 1";
   const char *contentId2 = "A Title for a content 2";
   struct NV_DrmBuffer_st buf1;
@@ -191,13 +196,17 @@ int main()
 
   ret = DrmKernel_NvDrmPlugin_onSaveRights(1, &right1, "/no/path", contentId1);
   printf("===> Saving right1 for contentId1: %s (OK expected) => %s\n", ret == NV_NO_ERROR ? "OK" : "NOK", ret == NV_NO_ERROR ? "PASSED" : "FAILED");
+  retall = ret;
   ret = DrmKernel_NvDrmPlugin_onSaveRights(2, &right2, "/no/path", contentId2);
   printf("===> Saving right2 for contentId2: %s (OK expected) => %s\n", ret == NV_NO_ERROR ? "OK" : "NOK", ret == NV_NO_ERROR ? "PASSED" : "FAILED");
+  retall &= ret;
 
   ret = DrmKernel_NvDrmPlugin_onSaveRights(3, &right1, "/no/path", contentId2);
   printf("===> Saving right1 for contentId2: %s (NOK expected) => %s\n", ret == NV_NO_ERROR ? "OK" : "NOK", ret != NV_NO_ERROR ? "PASSED" : "FAILED");
+  retall |= !ret;
   ret = DrmKernel_NvDrmPlugin_onSaveRights(4, &right2, "/no/path", contentId1);
   printf("===> Saving right2 for contentId1: %s (NOK expected) => %s\n", ret == NV_NO_ERROR ? "OK" : "NOK", ret != NV_NO_ERROR ? "PASSED" : "FAILED");
+  retall |= !ret;
 
-  return(0);
+  return(retall);
 }

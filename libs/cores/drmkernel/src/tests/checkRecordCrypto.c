@@ -178,6 +178,7 @@ int main()
   SecureRecord mRecord3;
   SecureRecord mRecord4;
   int ret = 0;
+  int retall = 0;
 
   mRecord1._key = "A Title for a content 1";
   mRecord1._keyId = (unsigned char *)kid1;
@@ -188,6 +189,7 @@ int main()
 
   ret = checkRecordCrypto(&mRecord1);
   printf ("===> record1 vs tag1: %s (OK expected) => %s\n", ret ? "OK":"NOK", ret ? "PASSED":"FAILED");
+  retall = ret;
 
   mRecord2._key = "A Title for a content 2";
   mRecord2._keyId = (unsigned char *)kid2;
@@ -198,6 +200,7 @@ int main()
 
   ret = checkRecordCrypto(&mRecord2);
   printf ("===> record2 vs tag2: %s (OK expected) => %s\n", ret ? "OK":"NOK", ret ? "PASSED":"FAILED");
+  retall &= ret;
 
   mRecord3._key = "A Title for a content 1";
   mRecord3._keyId = (unsigned char *)kid1;
@@ -208,6 +211,7 @@ int main()
 
   ret = checkRecordCrypto(&mRecord3);
   printf ("===> record1 vs tag2: %s (NOK expected) => %s\n", ret ? "OK":"NOK", ret ? "FAILED":"PASSED");
+  retall &= !ret;
 
   mRecord4._key = "A Title for a content 2";
   mRecord4._keyId = (unsigned char *)kid2;
@@ -218,6 +222,7 @@ int main()
 
   ret = checkRecordCrypto(&mRecord4);
   printf ("===> record2 vs tag1: %s (NOK expected) => %s\n", ret ? "OK":"NOK", ret ? "FAILED":"PASSED");
+  retall &= !ret;
 
-  return(0);
+  return(retall);
 }

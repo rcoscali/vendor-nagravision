@@ -24,24 +24,64 @@ LOCAL_C_INCLUDES += \
     $(TOP)/frameworks/native/include/utils \
     $(TOP)/frameworks/av/include \
     $(TOP)/frameworks/av/drm/libdrmframework/plugins/common/include \
-    $(TOP)/external/libxml2/include \
-    $(TOP)/external/icu4c/common \
-    $(TOP)/external/stlport/stlport \
     $(TOP)/external/openssl/include \
     $(TOP)/bionic \
     $(TOP)/bionic/libstdc++/include \
     $(LOCAL_PATH)/../include
 
-LOCAL_SHARED_LIBRARIES := \
-    libdrmframework \
-    libutils \
-    libbinder \
-    libicuuc \
-    liblog \
-    libcutils \
-    libcrypto \
-    libstlport \
-    libstdc++ \
-    libdl
-
 include $(BUILD_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE:= CryptoKernelTest_decrypt
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES:= \
+    CryptoKernel.c \
+    tests/decrypt.c
+LOCAL_CFLAGS := -std=c99 -fvisibility=hidden
+LOCAL_C_INCLUDES += \
+    $(TOP)/frameworks/native/include/utils \
+    $(TOP)/frameworks/av/include \
+    $(TOP)/frameworks/av/drm/libdrmframework/plugins/common/include \
+    $(TOP)/external/openssl/include \
+    $(TOP)/external/sqlite/dist \
+    $(TOP)/bionic \
+    $(TOP)/bionic/libstdc++/include \
+    $(LOCAL_PATH)/../../drmkernel/include \
+    $(LOCAL_PATH)/../include
+
+LOCAL_STATIC_LIBRARIES := \
+    libnvdrmkernel
+
+LOCAL_SHARED_LIBRARIES := \
+    libsqlite \
+    libcrypto \
+    liblog
+
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE:= HostCryptoKernelTest_decrypt
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES:= \
+	CryptoKernel.c \
+	tests/decrypt.c \
+	../../drmkernel/src/DrmKernel.c \
+	../../drmkernel/src/nvDatabase.c \
+	../../drmkernel/src/nvDatabaseSecureTable.c
+LOCAL_CFLAGS := -DDUMP_SUBSAMPLES -DDRM_HOST_KERNEL_TEST=1 -DCRYPTO_HOST_KERNEL_TEST=1 -std=c99 -fvisibility=hidden
+LOCAL_C_INCLUDES += \
+    $(TOP)/frameworks/native/include/utils \
+    $(TOP)/frameworks/av/include \
+    $(TOP)/frameworks/av/drm/libdrmframework/plugins/common/include \
+    $(TOP)/external/openssl/include \
+    $(TOP)/external/sqlite/dist \
+    $(TOP)/bionic \
+    $(TOP)/bionic/libstdc++/include \
+    $(LOCAL_PATH)/../../drmkernel/include \
+    $(LOCAL_PATH)/../include
+
+LOCAL_SHARED_LIBRARIES := \
+    libsqlite \
+    libcrypto
+
+include $(BUILD_HOST_EXECUTABLE)

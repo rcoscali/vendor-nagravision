@@ -33,34 +33,38 @@
        cohen@PC12316-LX:~$
 
 for generating a content right tag:
-   # echo -ne "contentId + <length> + <protectedKey>" | openssl sha256 -binary | openssl enc -nopad -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | od -A n -w32 -t x1
+   # echo -ne "contentId + keyId + <length> + <protectedKey>" | openssl sha256 -binary | openssl enc -nopad -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | od -A n -w32 -t x1
    ex.:
 
    Key and IV are the one defined in DrmKernel.c provided to openssl as hex bytes string
 
-   For the right 1 test vector
-     "A Title for a content 1" : \x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x31
+   For the right 1 test vector (note the \x00 at end of content id, it is a C string: need it at right decoding)
+     "A Title for a content 1" : \x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x31\x00
+     keyId:                      \x12\x1a\x0f\xca\x0f\x1b\x47\x5b\x89\x10\x29\x7f\xa8\xe0\xa0\x7e
      Length                      \x00\x20
      Protected Key #1            \x91\xa9\xba\xa6\xba\x28\xe5\x15\x7f\x60\x23\xc7\x79\x53\x21\x16\xc2\x97\x36\xe0\x6f\x3b\x73\x65\xd0\x81\x2a\x86\x0e\x4b\xf7\x10
 
-       cohen@PC12316-LX:~$ echo -ne "\x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x31\x00\x20\x91
+       cohen@PC12316-LX:~$ echo -ne "\x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x31\x00\x12\
+       > \x1a\x0f\xca\x0f\x1b\x47\x5b\x89\x10\x29\x7f\xa8\xe0\xa0\x7e\x00\x20\x91\
        > \xa9\xba\xa6\xba\x28\xe5\x15\x7f\x60\x23\xc7\x79\x53\x21\x16\xc2\x97\x36\xe0\x6f\x3b\x73\x65\xd0\x81\x2a\x86\x0e\x4b\xf7\x10" | \
        > openssl sha256 -binary | openssl enc -e -nopad -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | \
        > od -A n -w32 -t x1
-        76 6d 75 87 3c 25 14 28 68 42 b3 3e fd aa 57 dc 9c f9 fe dd 9d 65 db e7 5d 5a fc 10 fd 74 41 06
-       cohen@PC12316-LX:Nitrogen6X-imx_jb4.3_1.3_NV-ga$ 
+        74 35 40 1a 16 21 28 38 2d 3a ba 8d 11 b2 76 56 65 e6 14 de 79 e9 4e 86 a5 18 d1 47 f3 76 a4 b8
+       cohen@PC12316-LX:~$ 
 
-   For the right 2 test vector
-     "A Title for a content 2" : \x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x32
+   For the right 2 test vector (note the \x00 at end of content id, it is a C string: need it at right decoding)
+     "A Title for a content 2" : \x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x32\x00
+     keyId:                      \x80\x9a\x82\xba\xec\x0e\x42\x54\xbf\x43\x57\x3e\xed\x9e\xac\x02
      Length                      \x00\x20
      Protected Key #2            \x62\x20\x97\x23\x6d\x4b\xad\xe2\x12\x38\xa7\x70\xd2\x17\xe3\xc5\x7c\xcf\x27\xcc\x41\x36\x90\x06\xf0\x12\x8c\xdd\x29\x96\xe3\x96
 
-       cohen@PC12316-LX:~$ echo -ne "\x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x32\x00\x20\
+       cohen@PC12316-LX:~$ echo -ne "\x41\x20\x54\x69\x74\x6c\x65\x20\x66\x6f\x72\x20\x61\x20\x63\x6f\x6e\x74\x65\x6e\x74\x20\x32\00\x80\
+       > \x9a\x82\xba\xec\x0e\x42\x54\xbf\x43\x57\x3e\xed\x9e\xac\x02\x00\x20\
        > \x62\x20\x97\x23\x6d\x4b\xad\xe2\x12\x38\xa7\x70\xd2\x17\xe3\xc5\x7c\xcf\x27\xcc\x41\x36\x90\x06\xf0\x12\x8c\xdd\x29\x96\xe3\x96" | \
        > openssl sha256 -binary | openssl enc -e -nopad -aes-128-cbc -K B701020310111213A0B1C2D3E0F1E2F3 -iv a9323031356e61677261766973696f6e | \
        > od -A n -w32 -t x1
-        cd 66 f7 b4 94 89 da 02 74 7b 3c ca d8 ec 4a 15 55 c2 ed 4d d7 9a 78 d3 49 98 7f 5c 47 11 56 e3
-       cohen@PC12316-LX:Nitrogen6X-imx_jb4.3_1.3_NV-ga$ 
+        50 42 e0 e5 ce 61 1e b7 a7 c6 66 a8 94 fd 02 85 81 f4 aa 6b b4 2b 94 57 7e 37 48 58 19 9b 2e b8
+       cohen@PC12316-LX:~$ 
 
  */
 
@@ -90,10 +94,10 @@ const uint8_t contentKey1_right_data[AES_BLOCK_SIZE*2] = {
 };
 const size_t contentKey1_right_datalen = AES_BLOCK_SIZE*2;
 const uint8_t right1_right_data[SHA256_DIGEST_LENGTH] = {
-  /* SHA256    0x00 */  0x76, 0x6d, 0x75, 0x87, 0x3c, 0x25, 0x14, 0x28, 
-  /*           0x08 */  0x68, 0x42, 0xb3, 0x3e, 0xfd, 0xaa, 0x57, 0xdc, 
-  /*           0x10 */  0x9c, 0xf9, 0xfe, 0xdd, 0x9d, 0x65, 0xdb, 0xe7, 
-  /*           0x18 */  0x5d, 0x5a, 0xfc, 0x10, 0xfd, 0x74, 0x41, 0x06
+  /* SHA256    0x00 */  0x74, 0x35, 0x40, 0x1a, 0x16, 0x21, 0x28, 0x38, 
+  /*           0x08 */  0x2d, 0x3a, 0xba, 0x8d, 0x11, 0xb2, 0x76, 0x56, 
+  /*           0x10 */  0x65, 0xe6, 0x14, 0xde, 0x79, 0xe9, 0x4e, 0x86, 
+  /*           0x18 */  0xa5, 0x18, 0xd1, 0x47, 0xf3, 0x76, 0xa4, 0xb8
 };
 const size_t right1_right_datalen = SHA256_DIGEST_LENGTH;
 
@@ -109,10 +113,10 @@ const uint8_t contentKey2_right_data[AES_BLOCK_SIZE*2] = {
 };
 const size_t contentKey2_right_datalen = AES_BLOCK_SIZE*2;
 const uint8_t right2_right_data[SHA256_DIGEST_LENGTH] = {
-  /* SHA256    0x00 */  0xcd, 0x66, 0xf7, 0xb4, 0x94, 0x89, 0xda, 0x02, 
-  /*           0x08 */  0x74, 0x7b, 0x3c, 0xca, 0xd8, 0xec, 0x4a, 0x15, 
-  /*           0x10 */  0x55, 0xc2, 0xed, 0x4d, 0xd7, 0x9a, 0x78, 0xd3, 
-  /*           0x18 */  0x49, 0x98, 0x7f, 0x5c, 0x47, 0x11, 0x56, 0xe3
+  /* SHA256    0x00 */ 0x50, 0x42, 0xe0, 0xe5, 0xce, 0x61, 0x1e, 0xb7, 
+  /*           0x08 */ 0xa7, 0xc6, 0x66, 0xa8, 0x94, 0xfd, 0x02, 0x85, 
+  /*           0x10 */ 0x81, 0xf4, 0xaa, 0x6b, 0xb4, 0x2b, 0x94, 0x57, 
+  /*           0x18 */ 0x7e, 0x37, 0x48, 0x58, 0x19, 0x9b, 0x2e, 0xb8 
 };
 const size_t right2_right_datalen = SHA256_DIGEST_LENGTH;
 
@@ -166,18 +170,22 @@ int selectSecureRecord(__attribute__((unused)) sqlite3* pxDatabase,
 {
   if (strcmp(xKey, contentId1) == 0 || strcmp(xKey, contentId3) == 0)
     {
-      pxRecord->_keyId = keyId1_right_data;
-      pxRecord->_contentKey = strdup(USTR(contentKey1_right_data));
+      pxRecord->_keyId = malloc(AES_BLOCK_SIZE);
+      memcpy(pxRecord->_keyId, keyId1_right_data, AES_BLOCK_SIZE);
+      pxRecord->_contentKey = USTR(strdup(STR(contentKey1_right_data)));
       pxRecord->_contentKeySize = contentKey1_right_datalen;
-      pxRecord->_tag =  strdup(USTR(right1_right_data));
+      pxRecord->_tag = malloc(contentKey1_right_datalen);
+      memcpy(pxRecord->_tag, right1_right_data, contentKey1_right_datalen);
       pxRecord->_tagSize = right1_right_datalen;
     }
   else if (strcmp(xKey, contentId2) == 0 || strcmp(xKey, contentId4) == 0)
     {
-      pxRecord->_keyId = keyId2_right_data;
-      pxRecord->_contentKey =  strdup(USTR(contentKey2_right_data));
+      pxRecord->_keyId = malloc(AES_BLOCK_SIZE);
+      memcpy(pxRecord->_keyId, keyId2_right_data, AES_BLOCK_SIZE);
+      pxRecord->_contentKey =  USTR(strdup(STR(contentKey2_right_data)));
       pxRecord->_contentKeySize = contentKey2_right_datalen;
-      pxRecord->_tag =  strdup(USTR(right2_right_data));
+      pxRecord->_tag = malloc(right2_right_datalen);
+      memcpy(pxRecord->_tag, right2_right_data, right2_right_datalen);
       pxRecord->_tagSize = right2_right_datalen;
     }
   return SQLITE_OK;
@@ -186,16 +194,21 @@ int selectSecureRecord(__attribute__((unused)) sqlite3* pxDatabase,
 int main()
 {
   status_t ret;
+  status_t retall;
 
-  ret = DrmKernel_NvDrmPlugin_onCheckRightsStatus(1, contentId1, 0);
+  ret = DrmKernel_NvDrmPlugin_onCheckRightsStatus(1, strdup(contentId1), 0);
   printf("===> Check right1 for contentId1: %s (OK expected) => %s\n", ret == NV_RightsStatus_RIGHTS_VALID ? "OK" : "NOK", ret == NV_RightsStatus_RIGHTS_VALID ? "PASSED" : "FAILED");
-  ret = DrmKernel_NvDrmPlugin_onCheckRightsStatus(2, contentId2, 0);
+  retall = ret == NV_RightsStatus_RIGHTS_VALID;
+  ret = DrmKernel_NvDrmPlugin_onCheckRightsStatus(2, strdup(contentId2), 0);
   printf("===> Check right2 for contentId2: %s (OK expected) => %s\n", ret == NV_RightsStatus_RIGHTS_VALID ? "OK" : "NOK", ret == NV_RightsStatus_RIGHTS_VALID ? "PASSED" : "FAILED");
+  retall &= ret == NV_RightsStatus_RIGHTS_VALID;
 
-  ret = DrmKernel_NvDrmPlugin_onCheckRightsStatus(3, contentId3, 0);
+  ret = DrmKernel_NvDrmPlugin_onCheckRightsStatus(3, strdup(contentId3), 0);
   printf("===> Check right1 for contentId3: %s (NOK expected) => %s\n", ret == NV_RightsStatus_RIGHTS_VALID ? "OK" : "NOK", ret == NV_RightsStatus_RIGHTS_VALID ? "FAILED" : "PASSED");
-  ret = DrmKernel_NvDrmPlugin_onCheckRightsStatus(4, contentId4, 0);
+  retall &= ret != NV_RightsStatus_RIGHTS_VALID;
+  ret = DrmKernel_NvDrmPlugin_onCheckRightsStatus(4, strdup(contentId4), 0);
   printf("===> Check right2 for contentId4: %s (NOK expected) => %s\n", ret == NV_RightsStatus_RIGHTS_VALID ? "OK" : "NOK", ret == NV_RightsStatus_RIGHTS_VALID ? "FAILED" : "PASSED");
+  retall &= ret != NV_RightsStatus_RIGHTS_VALID;
 
-  return(0);
+  return(retall);
 }
