@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <strings.h>
 #include <malloc.h>
 
 #define LOG_NDEBUG 0

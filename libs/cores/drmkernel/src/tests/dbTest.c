@@ -264,5 +264,8 @@ int main()
   printf("==> no key for KeyId3 (NOK expected) => %s: %s\n", ok ? "OK" : "NOK", ok ? "FAILED":"PASSED");
   retall &= !ok;
 
+  if (unlink("host_nv.db"))
+    printf("unlink error: remove host_nv.db file by hand !!\n");
+
   return(retall);
 }
